@@ -35,17 +35,18 @@ export default function (args: string[], callback: (FFMpegStatus) => void): Prom
 }
 
 function extract(data: string): FFMpegStatus | null {
+  if (data.split('\n').length !== 1) {
+    return null;
+  }
+  
   try {
-    const regex = /frame=[ \d]* fps=[ \d]* q=[ .-\d]* L?size=[ \d]*kB time=[:.\d]* bitrate=[.\d]*kbits\/s speed=[.\d]*x/;
-    const matched: string = data.match(regex)[0];
-
-    const frameMatched = matched.match(/frame=[ \d]*/);
-    const fpsMatched = matched.match(/fps=[ \d]*/);
-    const qMatched = matched.match(/q=[ .-\d]*/);
-    const sizeMatched = matched.match(/size=[ \d]*kB/);
-    const timeMatched = matched.match(/time=[:.\d]*/)[0];
-    const bitrateMatched = matched.match(/bitrate=[.\d]*kbits\/s/)[0];
-    const speedMatched = matched.match(/speed=[.\d]*x/)[0];
+    const frameMatched = data.match(/frame=[ \d]*/);
+    const fpsMatched = data.match(/fps=[ \d]*/);
+    const qMatched = data.match(/q=[ .-\d]*/);
+    const sizeMatched = data.match(/size=[ \d]*kB/);
+    const timeMatched = data.match(/time=[:.\d]*/)[0];
+    const bitrateMatched = data.match(/bitrate=[.\d]*kbits\/s/)[0];
+    const speedMatched = data.match(/speed=[.\d]*x/)[0];
 
     const frameString = frameMatched[0].match(/[\d]+/)[0];
     const fpsString = fpsMatched[0].match(/[\d]+/)[0];
