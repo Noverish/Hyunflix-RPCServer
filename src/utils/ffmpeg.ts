@@ -15,16 +15,15 @@ export default function (args: string[], callback: (FFMpegStatus) => void): Prom
     const ffmpeg = spawn('ffmpeg', args);
     
     ffmpeg.stdout.on('data', (data) => {
-      // const status = extract(data.toString());
-      // if (status) {
-      //   callback(status);
-      // }
+      console.log(data.toString());
     });
 
     ffmpeg.stderr.on('data', (data) => {
       const status = extract(data.toString());
       if (status) {
         callback(status);
+      } else {
+        console.log(data.toString());
       }
     });
 
@@ -40,27 +39,27 @@ function extract(data: string): FFMpegStatus | null {
   }
   
   try {
-    const frameMatched = data.match(/frame=[ \d]*/);
-    const fpsMatched = data.match(/fps=[ \d]*/);
-    const qMatched = data.match(/q=[ .-\d]*/);
-    const sizeMatched = data.match(/size=[ \d]*kB/);
-    const timeMatched = data.match(/time=[:.\d]*/)[0];
-    const bitrateMatched = data.match(/bitrate=[.\d]*kbits\/s/)[0];
-    const speedMatched = data.match(/speed=[.\d]*x/)[0];
+    const frameMatched = data.match(/frame=[ .-\d]*/)[0];
+    const fpsMatched = data.match(/fps=[ .-\d]*/)[0];
+    const qMatched = data.match(/q=[ .-\d]*/)[0];
+    const sizeMatched = data.match(/size=[ .-\d]*kB/)[0];
+    const timeMatched = data.match(/time=[ .:\d]*/)[0];
+    const bitrateMatched = data.match(/bitrate=[ .-\d]*kbits\/s/)[0];
+    const speedMatched = data.match(/speed=[ .-\d]*x/)[0];
 
-    const frameString = frameMatched[0].match(/[\d]+/)[0];
-    const fpsString = fpsMatched[0].match(/[\d]+/)[0];
-    const qString = qMatched[0].match(/[.-\d]+/)[0];
-    const sizeString = sizeMatched[0].match(/[.\d]+/)[0];
-    const timeString = timeMatched.match(/[:.\d]+/)[0];
-    const bitrateString = bitrateMatched.match(/[.\d]+/)[0];
-    const speedString = speedMatched.match(/[.\d]+/)[0];
+    const frameString = frameMatched.match(/[.-\d]+/)[0];
+    const fpsString = fpsMatched.match(/[.-\d]+/)[0];
+    const qString = qMatched.match(/[.-\d]+/)[0];
+    const sizeString = sizeMatched.match(/[.-\d]+/)[0];
+    const timeString = timeMatched.match(/[.:\d]+/)[0];
+    const bitrateString = bitrateMatched.match(/[.-\d]+/)[0];
+    const speedString = speedMatched.match(/[.-\d]+/)[0];
 
     return {
-      frame: parseInt(frameString),
-      fps: parseInt(fpsString),
+      frame: parseFloat(frameString),
+      fps: parseFloat(fpsString),
       q: parseFloat(qString),
-      size: parseInt(sizeString),
+      size: parseFloat(sizeString),
       time: timeString,
       bitrate: parseFloat(bitrateString),
       speed: parseFloat(speedString),
