@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, getConnection } from 'typeorm';
 
-@Entity({ name: 'encode' })
+@Entity()
 export class Encode {
-  @PrimaryGeneratedColumn({ name: '_id' })
+  @PrimaryGeneratedColumn()
   encodeId: number;
 
   @Column()
@@ -14,7 +14,7 @@ export class Encode {
   @Column()
   options: string;
 
-  @Column()
+  @Column("float", { default: 0 })
   progress: number;
 
   @Column()
@@ -33,7 +33,7 @@ export class Encode {
       .createQueryBuilder()
       .update(Encode)
       .set({ progress })
-      .where('_id = :encodeId', { encodeId })
+      .where('encodeId = :encodeId', { encodeId })
       .execute();
   }
 }
