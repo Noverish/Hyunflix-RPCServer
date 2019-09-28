@@ -4,7 +4,7 @@ export function exec(command: string): Promise<string> {
   return new Promise((resolve, reject) => {
     cp.exec(command, (error, stdout, stderr) => {
       if (error) {
-        reject(error.toString());
+        reject(error.stack);
       } else if(stderr) {
         reject(stderr.trim());
       } else {
