@@ -36,4 +36,23 @@ export class Encode {
       .where('encodeId = :encodeId', { encodeId })
       .execute();
   }
+  
+  static async findAll(): Promise<Encode[]> {
+    return await getConnection()
+      .getRepository(Encode)
+      .createQueryBuilder()
+      .orderBy('encodeId', 'DESC')
+      .getMany();
+  }
+
+  static async insert(inpath: string, outpath: string, options: string): Promise<number> {
+    const result = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(Encode)
+      .values({ inpath, outpath, options, date: new Date() })
+      .execute();
+    
+    return result.identifiers[0].encodeId;
+  }
 }

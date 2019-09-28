@@ -1,69 +1,46 @@
-import { join, basename, parse } from 'path';
-import { createConnection, getConnection } from 'typeorm';
-import * as fs from 'fs';
+import * as express from 'express';
+import * as http from 'http';
+import * as cors from 'cors';
+import { createConnection } from 'typeorm';
 
-import { FFMpegStatus, default as ffmpeg } from '@src/utils/ffmpeg';
-import { ffprobe, FFProbe } from '@src/utils/ffprobe';
-import { POOL_INTERVAL, ARCHIVE_PATH } from '@src/config';
-import { send } from '@src/server/socket';
-import { Encode } from '@src/entity';
+import { PORT } from '@src/config';
+import { createSocket } from '@src/utils/socket';
+import { validateToken } from '@src/middlewares/validate-token';
+import { consoleLogger } from '@src/middlewares/logger';
+import { workNotDone } from '@src/worker';
+import routes from '@src/routes';
 
-function encodeIfExists() {
-  (async () => {
-    try {
-      await getConnection();
-    } catch (err) {
-      await createConnection();
-    }
-    
-    const queuedList: Encode[] = await Encode.findNotDone();
-  
-    if (queuedList.length > 0) {
-      const queued = queuedList[0];
-      
-      const args: string[] = queued.options.split(' ');
-      const inpath: string = queued.inpath;
-      const outpath: string = (inpath === queued.outpath)
-        ? parse(inpath).dir + '/' + parse(inpath).name + '.tmp.mp4'
-        : queued.outpath;
-         
-      const realInPath = join(ARCHIVE_PATH, inpath);
-      const realOutPath = (outpath === '/dev/null') ? outpath : join(ARCHIVE_PATH, outpath);
-      
-      const probed: FFProbe = await ffprobe(realInPath);
-      
-      const newArgs = ['-i', realInPath, ...args, realOutPath].filter(v => !!v);
-      
-      console.log(`[${new Date().toLocaleString()}]`, 'ffmpeg ' + newArgs.join(' '));
-  
-      await ffmpeg(newArgs, (status: FFMpegStatus) => {
-        // const remain: number = Math.floor((probed.frame - status.frame) / status.fps);
-        const remain = 0;
-        const progress: number = parseFloat((status.time / probed.duration * 100).toFixed(2));
-        
-        console.log(
-          `[${new Date().toLocaleString()}]`,
-          `"${basename(queued.inpath)}"`,
-          `${progress}%`,
-          `${remain}s`,
-          `${status.speed}x`
-        );
-        
-        Encode.updateProgress(queued.encodeId, progress);
-        
-        send(queued.encodeId, progress, remain, status.speed);
-      })
-  
-      // Encode.updateProgress(queued.encodeId, 100);
-      
-      if(queued.inpath === queued.outpath) {
-        fs.unlinkSync(realInPath);
-        fs.renameSync(realOutPath, realInPath);
-      }
-    }
-    
-    setTimeout(encodeIfExists, POOL_INTERVAL);
-  })().catch(console.error);
-}
+const app = express();
 
-setTimeout(encodeIfExists, POOL_INTERVAL);
+app.set('port', PORT);
+
+app.use(cors());
+app.use(express.json());
+
+app.use(consoleLogger);
+
+app.use(validateToken);
+app.use('/', routes);
+
+app.use((req, res, next) => {
+  res.status(404);
+  res.json({ msg: 'Not Found' });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500);
+  res.json({ msg: err.stack });
+});
+
+export const server = http.createServer(app);
+
+server.listen(PORT, () => {
+  console.log(`* FFMpeg Server Started at ${PORT}`);
+  createConnection()
+    .then(() => {
+      createSocket();
+      workNotDone();
+    })
+    .catch(console.error);
+});
