@@ -3,7 +3,7 @@ import * as http from 'http';
 import * as cors from 'cors';
 import { createConnection } from 'typeorm';
 
-import { PORT } from '@src/config';
+import { PORT, FFMPEG_SOCKET_PATH, YOUTUBE_SOCKET_PATH } from '@src/config';
 import { createSocket } from '@src/utils/socket';
 import { validateToken } from '@src/middlewares/validate-token';
 import { consoleLogger } from '@src/middlewares/logger';
@@ -39,7 +39,8 @@ server.listen(PORT, () => {
   console.log(`* FFMpeg Server Started at ${PORT}`);
   createConnection()
     .then(() => {
-      createSocket();
+      createSocket(FFMPEG_SOCKET_PATH);
+      createSocket(YOUTUBE_SOCKET_PATH);
       workNotDone();
     })
     .catch(console.error);

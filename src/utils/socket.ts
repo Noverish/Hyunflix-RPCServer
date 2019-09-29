@@ -1,29 +1,29 @@
 import * as socketio from 'socket.io';
 
-import { SOCKET_PATH } from '@src/config';
 import { server } from '@src/app';
+import { logger } from '@src/utils';
 
 const sockets = {};
 
-export function createSocket() {
-  const io = socketio(server, { path: SOCKET_PATH });
+export function createSocket(path: string) {
+  const io = socketio(server, { path });
+  sockets[path] = [];
+  
   io.on('connection', (socket) => {
-    console.log(`[${new Date().toLocaleString()}]`, '[Socket] Connected!', socket.id);
-    sockets[socket.id] = socket;
+    logger(`[Socket] Connected ${socket.id} at "${path}"`);
+    sockets[path].push(socket);
     
     socket.on('disconnect', () => {
-      console.log(`[${new Date().toLocaleString()}]`, '[Socket] Disonnected!', socket.id);
-      delete sockets[socket.id];
+      logger(`[Socket] Disconnected ${socket.id} at "${path}"`);
+      sockets[path] = sockets[path].filter(s => s !== socket);
     });
   });
 }
 
-export function send(encodeId: number, progress: number, remain: number, speed: number) {
-  const payload = { encodeId, progress, remain, speed };
+export function send(path: string, payload: object) {
+  const socketList: socketio.Socket[] = sockets[path];
   
-  const socketIds = Object.keys(sockets);
-  for(const socketId of socketIds) {
-    const socket = sockets[socketId];
+  for (const socket of socketList) {
     socket.send(JSON.stringify(payload));
   }
 }

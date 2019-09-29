@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 import { FFMpegStatus, ffmpeg } from '@src/utils/ffmpeg';
 import { ffprobe, FFProbe } from '@src/utils/ffprobe';
-import { ARCHIVE_PATH } from '@src/config';
+import { ARCHIVE_PATH, FFMPEG_SOCKET_PATH } from '@src/config';
 import { send } from '@src/utils/socket';
 import { Encode } from '@src/entity';
 import { logger } from '@src/utils';
@@ -54,7 +54,12 @@ async function work(encode: Encode) {
     
     Encode.updateProgress(encode.encodeId, progress);
     
-    send(encode.encodeId, progress, eta, status.speed);
+    send(FFMPEG_SOCKET_PATH, {
+      progress,
+      eta,
+      speed: status.speed,
+      encodeId: encode.encodeId,
+    });
   })
 
   if(encode.inpath === encode.outpath) {
