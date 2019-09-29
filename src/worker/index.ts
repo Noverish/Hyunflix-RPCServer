@@ -7,6 +7,30 @@ import { ARCHIVE_PATH } from '@src/config';
 import { send } from '@src/utils/socket';
 import { Encode } from '@src/entity';
 
+let isWorking = false;
+
+export function workNotDone() {
+  if (isWorking) {
+    return;
+  }
+  console.log('Start Working');
+  isWorking = true;
+  
+  (async () => {
+    while(true) {
+      const encodes: Encode[] = await Encode.findNotDone();
+      
+      if (encodes.length === 0) {
+        console.log('Finish Working');
+        isWorking = false;
+        return;
+      }
+      
+      await work(encodes[0]);
+    }
+  })().catch(console.error);
+}
+
 export async function work(encode: Encode) {
   const args: string[] = encode.options.split(' ');
   const inpath: string = encode.inpath;
@@ -23,50 +47,34 @@ export async function work(encode: Encode) {
   
   console.log(`[${new Date().toLocaleString()}]`, 'ffmpeg ' + newArgs.join(' '));
 
+  let beforeProgress = 0;
+  let beforeTime = Date.now();
   await ffmpeg(newArgs, (status: FFMpegStatus) => {
-    // TODO const remain: number = Math.floor((probed.frame - status.frame) / status.fps);
-    const remain = 0;
-    const progress: number = parseFloat((status.time / probed.duration * 100).toFixed(2));
+    const nowProgress: number = parseFloat((status.time / probed.duration * 100).toFixed(2));
+    const nowTime = Date.now();
+    
+    const speed = (nowProgress - beforeProgress) / (nowTime - beforeTime);
+    const remainRaw = (100 - nowProgress) / (speed * 1000)
+    const remain = parseFloat(remainRaw.toFixed(1));
     
     console.log(
       `[${new Date().toLocaleString()}]`,
       `"${basename(encode.inpath)}"`,
-      `${progress}%`,
+      `${nowProgress}%`,
       `${remain}s`,
       `${status.speed}x`
     );
     
-    Encode.updateProgress(encode.encodeId, progress);
+    Encode.updateProgress(encode.encodeId, nowProgress);
     
-    send(encode.encodeId, progress, remain, status.speed);
+    send(encode.encodeId, nowProgress, remain, status.speed);
+    
+    beforeProgress = nowProgress;
+    beforeTime = nowTime;
   })
 
-  // TODO Encode.updateProgress(queued.encodeId, 100);
-  
   if(encode.inpath === encode.outpath) {
     fs.unlinkSync(realInPath);
     fs.renameSync(realOutPath, realInPath);
   }
-}
-
-let isWorking = false;
-
-export function workNotDone() {
-  if (isWorking) {
-    return;
-  }
-  isWorking = true;
-  
-  (async () => {
-    while(true) {
-      const encodes: Encode[] = await Encode.findNotDone();
-      
-      if (encodes.length === 0) {
-        isWorking = false;
-        return;
-      }
-      
-      await work(encodes[0]);
-    }
-  })().catch(console.error);
 }

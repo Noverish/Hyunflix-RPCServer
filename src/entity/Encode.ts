@@ -24,7 +24,7 @@ export class Encode {
     return await getConnection()
       .getRepository(Encode)
       .createQueryBuilder()
-      .where('progress < 100')
+      .where('progress < 99')
       .getMany();
   }
 
