@@ -1,4 +1,4 @@
-import { join, basename, parse } from 'path';
+import { join, basename, parse, extname } from 'path';
 import * as fs from 'fs';
 
 import { FFMpegStatus, default as ffmpeg } from '@src/utils/ffmpeg';
@@ -6,6 +6,7 @@ import { ffprobe, FFProbe } from '@src/utils/ffprobe';
 import { ARCHIVE_PATH } from '@src/config';
 import { send } from '@src/utils/socket';
 import { Encode } from '@src/entity';
+import { musicEncodeDone } from '@src/api';
 
 let isWorking = false;
 
@@ -76,5 +77,10 @@ export async function work(encode: Encode) {
   if(encode.inpath === encode.outpath) {
     fs.unlinkSync(realInPath);
     fs.renameSync(realOutPath, realInPath);
+  }
+  
+  // TODO 멋있게
+  if (extname(outpath) === '.mp3') {
+    await musicEncodeDone(outpath, probed.duration);
   }
 }
