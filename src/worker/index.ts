@@ -49,18 +49,24 @@ export async function work(encode: Encode) {
   }
 }
 
+let isWorking = false;
+
 export function workNotDone() {
+  if (isWorking) {
+    return;
+  }
+  isWorking = true;
+  
   (async () => {
-    const encodes: Encode[] = await Encode.findNotDone();
-    
-    if (encodes.length === 0) {
-      return;
+    while(true) {
+      const encodes: Encode[] = await Encode.findNotDone();
+      
+      if (encodes.length === 0) {
+        isWorking = false;
+        return;
+      }
+      
+      await work(encodes[0]);
     }
-    
-    const encode: Encode = encodes[0];
-    
-    await work(encode);
-    
-    setTimeout(workNotDone, 1000);
   })().catch(console.error);
 }
