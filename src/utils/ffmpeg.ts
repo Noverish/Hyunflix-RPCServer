@@ -8,9 +8,11 @@ export interface FFMpegStatus {
   time: number;
   bitrate: number;
   speed: number;
+  eta: number;
+  progress: number;
 }
 
-export default function (args: string[], callback: (FFMpegStatus) => void): Promise<void> {
+export function ffmpeg(args: string[], duration: number, callback: (FFMpegStatus) => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const ffmpeg = spawn('ffmpeg', args);
     
@@ -18,9 +20,21 @@ export default function (args: string[], callback: (FFMpegStatus) => void): Prom
       // console.log(data.toString());
     });
 
+    let beforeProgress = 0;
+    let beforeTime = Date.now();
     ffmpeg.stderr.on('data', (data) => {
       const status = extract(data.toString());
+      
       if (status) {
+        const nowProgress: number = parseFloat((status.time / duration * 100).toFixed(2));
+        const nowTime = Date.now();
+        
+        const progressPerMillis = (nowProgress - beforeProgress) / (nowTime - beforeTime);
+        const remainRaw = (100 - nowProgress) / (progressPerMillis * 1000)
+        const eta = parseFloat(remainRaw.toFixed(1));
+        
+        status.progress = nowProgress;
+        status.eta = eta;
         callback(status);
       } else {
         // console.log(data.toString());
@@ -42,6 +56,8 @@ function extract(data: string): FFMpegStatus | null {
     time: extractTime(data),
     bitrate: extractBitrate(data),
     speed: extractSpeed(data),
+    eta: -1,
+    progress: -1,
   };
   
   const values = Object.keys(tmp).map(k => tmp[k]);

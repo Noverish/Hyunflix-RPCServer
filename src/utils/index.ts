@@ -23,3 +23,7 @@ function leadingZeros(num: number, digits: number) {
   }
   return zero + n;
 }
+
+export function logger(...args: string[]) {
+  console.log(`[${dateToString(new Date())}]`, args.join(' '));
+}

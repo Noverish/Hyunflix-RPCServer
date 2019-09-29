@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 
 import { Encode } from '@src/entity';
 import { checkAdmin } from '@src/middlewares/check-admin';
-import { workNotDone } from '@src/worker';
+import { workNotDone } from '@src/worker/ffmpeg';
 
 const router: Router = Router();
 

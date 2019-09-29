@@ -1,15 +1,13 @@
 import { Router } from 'express';
 
-import pause from './pause';
-import resume from './resume';
-import state from './state';
+import ffmpeg from './ffmpeg';
 import encode from './encode';
+import youtube from './youtube';
 
 const router: Router = Router();
 
 router.use('/encode', encode);
-router.post('/pause', pause);
-router.post('/resume', resume);
-router.get('/state', state);
+router.use('/ffmpeg', ffmpeg);
+router.use('/youtube', youtube);
 
 export default router;

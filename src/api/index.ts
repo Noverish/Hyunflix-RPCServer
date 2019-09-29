@@ -1,6 +1,6 @@
 import * as request from 'request';
 
-import { YOUTUBE_HOST } from '@src/config';
+import { BACKEND_HOST } from '@src/config';
 
 function send(url, method, payload): Promise<request.Response> {
   return new Promise((resolve, reject) => {
@@ -22,10 +22,11 @@ function send(url, method, payload): Promise<request.Response> {
   });
 }
 
-export async function musicEncodeDone(path: string, duration: number) {
-  const url = `${YOUTUBE_HOST}/encoding-done`;
+
+export async function addMusic(title: string, path: string, duration: number, youtube: string, tags: string[], authority: string[]) {
+  const url = `${BACKEND_HOST}/musics`;
   const method = `POST`;
-  const payload = { path, duration };
+  const payload = { title, path, duration, youtube, tags, authority };
   
   await send(url, method, payload);
 }

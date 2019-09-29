@@ -7,7 +7,7 @@ import { PORT } from '@src/config';
 import { createSocket } from '@src/utils/socket';
 import { validateToken } from '@src/middlewares/validate-token';
 import { consoleLogger } from '@src/middlewares/logger';
-import { workNotDone } from '@src/worker';
+import { workNotDone } from '@src/worker/ffmpeg';
 import routes from '@src/routes';
 
 const app = express();
