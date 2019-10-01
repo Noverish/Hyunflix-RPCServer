@@ -7,7 +7,6 @@ function send(url, method, payload): Promise<request.Response> {
     const options = {
       url,
       method,
-      headers: { authorization: 'Bearer youtube' },
       json: payload
     };
 

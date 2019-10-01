@@ -3,7 +3,7 @@ import { promises as fsPromises } from 'fs';
 import { parse as urlParse } from 'url';
 import { parse as queryParse } from 'querystring';
 
-import { YOUTUBE_SOCKET_PATH } from '@src/config';
+import { YOUTUBE_SOCKET_PATH, ARCHIVE_PATH } from '@src/config';
 import { addMusic } from '@src/api';
 import { logger } from '@src/utils';
 import { download, YoutubeStatus } from '@src/utils/youtube';
@@ -52,7 +52,7 @@ export default async function (url: string, tags: string[], music: boolean, vide
     const title = musicName;
     const youtube = queryParse(urlParse(url).query)['v'].toString();
     
-    await addMusic(title, path, duration, youtube, tags, []);
+    await addMusic(title, outpath.replace(ARCHIVE_PATH, ''), duration, youtube, tags, []);
     
     logger(`[Youtube Finish] ${url} => ${outpath}`);
     send(YOUTUBE_SOCKET_PATH, {
