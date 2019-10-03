@@ -3,7 +3,9 @@ import * as request from 'request';
 
 import { AUTH_URL } from '@src/config';
 
-export function auth(headers): Promise<request.Response> {
+export function auth(req: Request): Promise<request.Response> {
+  const headers = req.headers;
+
   return new Promise((resolve, reject) => {
     const options = {
       url: AUTH_URL,
@@ -11,6 +13,7 @@ export function auth(headers): Promise<request.Response> {
       headers: {
         authorization: headers['authorization'],
         cookie: headers['cookie'],
+        'x-forwarded-for': req.connection.remoteAddress,
       },
     };
 
@@ -27,7 +30,7 @@ export function auth(headers): Promise<request.Response> {
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   (async function () {
-    const authRes: request.Response = await auth(req.headers);
+    const authRes: request.Response = await auth(req);
 
     if (authRes.statusCode === 204) {
       req['userId'] = authRes.headers['x-hyunsub-userid'];
