@@ -19,15 +19,15 @@ export function workNotDone() {
   
   (async () => {
     while(true) {
-      const encodes: Encode[] = await Encode.findNotDone();
+      const encode: Encode | null = await Encode.findNotDone();
       
-      if (encodes.length === 0) {
+      if (encode) {
+        await work(encode);
+      } else {
         logger('[FFMpeg Working Finish]');
         isWorking = false;
         return;
       }
-      
-      await work(encodes[0]);
     }
   })().catch(console.error);
 }
@@ -48,24 +48,38 @@ async function work(encode: Encode) {
   
   const probed: FFProbe = await ffprobe(realInPath);
   
-  await ffmpeg(newArgs, probed.duration,(status: FFMpegStatus) => {
-    const { progress, eta, speed } = status;
-    logger(`[FFMpeg Encode] "${fileName}" ${progress}% ${eta}s ${speed}x`);
+  try {
+    await ffmpeg(newArgs, probed.duration,(status: FFMpegStatus) => {
+      const { progress, eta, speed } = status;
+      logger(`[FFMpeg Encode] "${fileName}" ${progress}% ${eta}s ${speed}x`);
+      
+      Encode.updateProgress(encode.encodeId, progress);
+      
+      send(FFMPEG_SOCKET_PATH, {
+        progress,
+        eta,
+        speed: status.speed,
+        encodeId: encode.encodeId,
+      });
+    })
     
-    Encode.updateProgress(encode.encodeId, progress);
+    if(encode.inpath === encode.outpath) {
+      fs.unlinkSync(realInPath);
+      fs.renameSync(realOutPath, realInPath);
+    }
+    
+    logger(`[FFMpeg Finish] ${newArgs.join(' ')}`);
+  } catch (err) {
+    Encode.updateProgress(encode.encodeId, -1);
     
     send(FFMPEG_SOCKET_PATH, {
-      progress,
-      eta,
-      speed: status.speed,
+      progress: -1,
+      eta: 0,
+      speed: 0,
       encodeId: encode.encodeId,
     });
-  })
-
-  if(encode.inpath === encode.outpath) {
-    fs.unlinkSync(realInPath);
-    fs.renameSync(realOutPath, realInPath);
+    
+    logger(`[FFMpeg Failed] ${newArgs.join(' ')}`);
+    logger(`[FFMpeg Failed] ${err.message}`);
   }
-  
-  logger(`[FFMpeg Finish] ${newArgs.join(' ')}`);
 }

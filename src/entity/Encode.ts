@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, getConnection } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, getConnection, Between } from 'typeorm';
 
 @Entity()
 export class Encode {
@@ -20,12 +20,10 @@ export class Encode {
   @Column()
   date: Date;
   
-  static async findNotDone(): Promise<Encode[]> {
+  static async findNotDone(): Promise<Encode | null> {
     return await getConnection()
       .getRepository(Encode)
-      .createQueryBuilder()
-      .where('progress < 99')
-      .getMany();
+      .findOne({ progress: Between(0, 99) });
   }
 
   static async updateProgress(encodeId: number, progress: number) {

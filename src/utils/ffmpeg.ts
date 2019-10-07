@@ -14,10 +14,11 @@ export interface FFMpegStatus {
 
 export function ffmpeg(args: string[], duration: number, callback: (FFMpegStatus) => void): Promise<void> {
   return new Promise((resolve, reject) => {
+    let stdouts = '';
     const ffmpeg = spawn('ffmpeg', args);
     
     ffmpeg.stdout.on('data', (data) => {
-      // console.log(data.toString());
+      stdouts += data.toString();
     });
 
     let beforeProgress = 0;
@@ -37,12 +38,16 @@ export function ffmpeg(args: string[], duration: number, callback: (FFMpegStatus
         status.eta = eta;
         callback(status);
       } else {
-        // console.log(data.toString());
+        stdouts += data.toString();
       }
     });
 
     ffmpeg.on('close', () => {
-      resolve();
+      if(stdouts.includes('Conversion failed!')) {
+        reject(new Error(stdouts))
+      } else {
+        resolve();
+      }
     });
   });
 }
