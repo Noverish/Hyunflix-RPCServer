@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, getConnection } from 'typeorm';
 @Entity()
 export class Youtube {
   @PrimaryGeneratedColumn()
-  youtubeId: number;
+  id: number;
 
   @Column('tinyint', { default: 0 })
   isMusic: number;
@@ -12,17 +12,14 @@ export class Youtube {
   url: string;
 
   @Column()
-  createDate: Date;
-  
-  @Column({ nullable: true })
-  finishDate: Date | null;
+  date: Date;
   
   static async findAll(): Promise<Youtube[]> {
     return await getConnection()
       .getRepository(Youtube)
-      .createQueryBuilder()
-      .orderBy('youtubeId', 'DESC')
-      .getMany();
+      .find({
+        order: { id: 'DESC' }
+      });
   }
   
   static async findNotDone(): Promise<Youtube[]> {
@@ -33,23 +30,14 @@ export class Youtube {
       .getMany();
   }
   
-  static async updateDone(youtubeId): Promise<void> {
-    await getConnection()
-      .createQueryBuilder()
-      .update(Youtube)
-      .set({ finishDate: new Date })
-      .where('youtubeId = :youtubeId', { youtubeId })
-      .execute();
-  }
-  
   static async insert(isMusic: boolean, url: string): Promise<number> {
     const result = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(Youtube)
-      .values({ url, isMusic: isMusic ? 1 : 0, createDate: new Date() })
+      .values({ url, isMusic: isMusic ? 1 : 0, date: new Date() })
       .execute();
 
-    return result.identifiers[0].youtubeId;
+    return result.identifiers[0].id;
   }
 }

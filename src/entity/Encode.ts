@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, getConnection, Between } from '
 @Entity()
 export class Encode {
   @PrimaryGeneratedColumn()
-  encodeId: number;
+  id: number;
 
   @Column()
   inpath: string;
@@ -26,21 +26,21 @@ export class Encode {
       .findOne({ progress: Between(0, 99) });
   }
 
-  static async updateProgress(encodeId: number, progress: number) {
+  static async updateProgress(id: number, progress: number) {
     return await getConnection()
       .createQueryBuilder()
       .update(Encode)
       .set({ progress })
-      .where('encodeId = :encodeId', { encodeId })
+      .where('id = :id', { id })
       .execute();
   }
   
   static async findAll(): Promise<Encode[]> {
     return await getConnection()
       .getRepository(Encode)
-      .createQueryBuilder()
-      .orderBy('encodeId', 'DESC')
-      .getMany();
+      .find({
+        order: { id: "DESC" }
+      });
   }
 
   static async insert(inpath: string, outpath: string, options: string): Promise<number> {
@@ -51,6 +51,6 @@ export class Encode {
       .values({ inpath, outpath, options, date: new Date() })
       .execute();
     
-    return result.identifiers[0].encodeId;
+    return result.identifiers[0].id;
   }
 }

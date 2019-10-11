@@ -49,17 +49,17 @@ async function work(encode: Encode) {
   const probed: FFProbe = await ffprobe(realInPath);
   
   try {
-    await ffmpeg(newArgs, probed.duration,(status: FFMpegStatus) => {
+    await ffmpeg(newArgs, probed.duration, (status: FFMpegStatus) => {
       const { progress, eta, speed } = status;
       logger(`[FFMpeg Encode] "${fileName}" ${progress}% ${eta}s ${speed}x`);
       
-      Encode.updateProgress(encode.encodeId, progress);
+      Encode.updateProgress(encode.id, progress);
       
       send(FFMPEG_SOCKET_PATH, {
         progress,
         eta,
         speed: status.speed,
-        encodeId: encode.encodeId,
+        encodeId: encode.id,
       });
     })
     
@@ -70,13 +70,13 @@ async function work(encode: Encode) {
     
     logger(`[FFMpeg Finish] ${newArgs.join(' ')}`);
   } catch (err) {
-    Encode.updateProgress(encode.encodeId, -1);
+    await Encode.updateProgress(encode.id, -1);
     
     send(FFMPEG_SOCKET_PATH, {
       progress: -1,
       eta: 0,
       speed: 0,
-      encodeId: encode.encodeId,
+      encodeId: encode.id,
     });
     
     logger(`[FFMpeg Failed] ${newArgs.join(' ')}`);
