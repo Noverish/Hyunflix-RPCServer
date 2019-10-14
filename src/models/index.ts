@@ -4,3 +4,8 @@ export enum YoutubeStage {
   encode = 2,
   success = 3,
 }
+
+export interface Subtitle {
+  language: string;
+  path: string;
+}
