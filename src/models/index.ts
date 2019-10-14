@@ -9,3 +9,10 @@ export interface Subtitle {
   language: string;
   path: string;
 }
+
+export interface File {
+  path: string;
+  name: string;
+  isdir: boolean;
+  size: number;
+}
