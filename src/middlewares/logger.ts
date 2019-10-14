@@ -14,5 +14,9 @@ morgan.token('date', (req, res) => {
   return dateToString(new Date());
 });
 
+morgan.token('url', (req, res) => {
+  return decodeURI(req.originalUrl);
+});
+
 const consoleFormat = '[:date] :remote-addr - :method :status :response-time ms ":url"';
 export const consoleLogger = morgan(consoleFormat);

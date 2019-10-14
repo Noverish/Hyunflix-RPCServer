@@ -16,3 +16,9 @@ export interface File {
   isdir: boolean;
   size: number;
 }
+
+export interface Stat {
+  size: number;
+  isDirectory: boolean;
+  isFile: boolean;
+}

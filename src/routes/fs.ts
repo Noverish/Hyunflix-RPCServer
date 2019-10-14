@@ -16,4 +16,37 @@ router.get('/readdir', (req: Request, res: Response, next: NextFunction) => {
   })().catch(next);
 })
 
+router.get('/walk', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    const path = req.query['path'];
+    
+    const paths: string[] = await fs.walk(path);
+    
+    res.status(200);
+    res.json(paths);
+  })().catch(next);
+})
+
+router.get('/access', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    const path = req.query['path'];
+    
+    const error: string = await fs.access(path);
+    
+    res.status(200);
+    res.json({ error });
+  })().catch(next);
+})
+
+router.get('/lstat', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    const path = req.query['path'];
+    
+    const stats = await fs.lstat(path);
+    
+    res.status(200);
+    res.json(stats);
+  })().catch(next);
+})
+
 export default router;
