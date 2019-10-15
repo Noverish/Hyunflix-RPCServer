@@ -15,10 +15,11 @@ export async function readdirWithFileTypes(path: string): Promise<fs.Dirent[]> {
   return await fsPromises.readdir(realPath, { withFileTypes: true });
 }
 
-export async function lstat(path: string): Promise<Stat> {
+export async function stat(path: string): Promise<Stat> {
   const realPath = join(ARCHIVE_PATH, path);
-  const stat = await fsPromises.lstat(realPath);
+  const stat = await fsPromises.stat(realPath);
   return {
+    path,
     size: stat.size,
     isDirectory: stat.isDirectory(),
     isFile: stat.isFile(),
@@ -53,13 +54,13 @@ export async function readdirDetail(path: string): Promise<File[]> {
 
       results.push(file);
     } else {
-      const stat = await lstat(filePath);
+      const s = await stat(filePath);
 
       results.push({
         isdir,
         path: filePath,
         name: f.name,
-        size: stat.size,
+        size: s.size,
       });
     }
   }
@@ -76,10 +77,10 @@ export async function walk(path: string): Promise<string[]> {
     const files = (await readdir(dirPath)).sort();
     for (const file of files) {
       const filePath = join(dirPath, file);
-      const stat = await lstat(filePath);
-      if (stat.isDirectory) {
+      const s = await stat(filePath);
+      if (s.isDirectory) {
         toGoList.push(filePath);
-      } else if (stat.isFile) {
+      } else if (s.isFile) {
         filePaths.push(filePath);
       }
     }

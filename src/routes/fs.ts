@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 
 import * as fs from '@src/fs';
-import { File } from '@src/models';
+import { File, Stat } from '@src/models';
 
 const router: Router = Router();
 
@@ -38,11 +38,25 @@ router.get('/access', (req: Request, res: Response, next: NextFunction) => {
   })().catch(next);
 })
 
-router.get('/lstat', (req: Request, res: Response, next: NextFunction) => {
+router.get('/stat', (req: Request, res: Response, next: NextFunction) => {
   (async () => {
     const path = req.query['path'];
     
-    const stats = await fs.lstat(path);
+    const stats = await fs.stat(path);
+    
+    res.status(200);
+    res.json(stats);
+  })().catch(next);
+})
+
+router.post('/stat-bulk', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    const paths: string[] = req.body['paths'];
+    const stats: Stat[] = []
+    
+    for(const path of paths) {
+      stats.push(await fs.stat(path));
+    }
     
     res.status(200);
     res.json(stats);
