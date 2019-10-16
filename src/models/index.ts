@@ -10,16 +10,9 @@ export interface Subtitle {
   path: string;
 }
 
-export interface File {
-  path: string;
-  name: string;
-  isdir: boolean;
-  size: number;
-}
-
 export interface Stat {
   path: string;
+  name: string;
   size: number;
-  isDirectory: boolean;
-  isFile: boolean;
+  isdir: boolean;
 }

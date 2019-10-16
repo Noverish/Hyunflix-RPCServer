@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import { join } from 'path';
+import { join, basename } from 'path';
 
-import { File, Stat } from '@src/models';
+import { Stat } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
 const fsPromises = fs.promises;
 
@@ -20,9 +20,9 @@ export async function stat(path: string): Promise<Stat> {
   const stat = await fsPromises.stat(realPath);
   return {
     path,
+    name: basename(path),
     size: stat.size,
-    isDirectory: stat.isDirectory(),
-    isFile: stat.isFile(),
+    isdir: stat.isDirectory(),
   }
 }
 
@@ -36,32 +36,22 @@ export async function access(path: string): Promise<string | null> {
   }
 }
 
-export async function readdirDetail(path: string): Promise<File[]> {
+export async function readdirStat(path: string): Promise<Stat[]> {
   const files: fs.Dirent[] = await readdirWithFileTypes(path);
-  const results: File[] = [];
+  const results: Stat[] = [];
 
   for (const f of files) {
-    const isdir = f.isDirectory();
     const filePath = join(path, f.name);
 
-    if (isdir) {
-      const file: File = {
-        isdir,
+    if (f.isDirectory()) {
+      results.push({
+        isdir: true,
         path: filePath,
         name: f.name,
         size: 0,
-      };
-
-      results.push(file);
-    } else {
-      const s = await stat(filePath);
-
-      results.push({
-        isdir,
-        path: filePath,
-        name: f.name,
-        size: s.size,
       });
+    } else {
+      results.push(await stat(filePath));
     }
   }
 
@@ -78,9 +68,9 @@ export async function walk(path: string): Promise<string[]> {
     for (const file of files) {
       const filePath = join(dirPath, file);
       const s = await stat(filePath);
-      if (s.isDirectory) {
+      if (s.isdir) {
         toGoList.push(filePath);
-      } else if (s.isFile) {
+      } else {
         filePaths.push(filePath);
       }
     }
