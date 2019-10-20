@@ -5,7 +5,7 @@ import { createConnection } from 'typeorm';
 
 import { PORT, FFMPEG_SOCKET_PATH, YOUTUBE_SOCKET_PATH } from '@src/config';
 import { createSocket } from '@src/utils/socket';
-import { validateToken } from '@src/middlewares/validate-token';
+import validateHeader from '@src/middlewares/validate-header';
 import { consoleLogger } from '@src/middlewares/logger';
 import { workNotDone } from '@src/worker/ffmpeg';
 import routes from '@src/routes';
@@ -19,7 +19,7 @@ app.use(express.json());
 
 app.use(consoleLogger);
 
-app.use(validateToken);
+app.use(validateHeader);
 app.use('/', routes);
 
 app.use((req, res, next) => {

@@ -16,3 +16,10 @@ export interface Stat {
   size: number;
   isdir: boolean;
 }
+
+export interface Auth {
+  id: number;
+  token: string;
+  authority: string[];
+  allowedPaths: string[];
+}

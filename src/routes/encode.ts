@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 
 import { Encode } from '@src/entity';
-import { checkAdmin } from '@src/middlewares/check-admin';
+import { checkAuthority } from '@src/middlewares/validate-header';
 import { workNotDone } from '@src/worker/ffmpeg';
 
 const router: Router = Router();
 
-router.get('/presets', checkAdmin, (req: Request, res: Response, next: NextFunction) => {
+router.get('/presets', checkAuthority('admin'), (req: Request, res: Response, next: NextFunction) => {
   const presets = {
     pass1: [
       '-c:v', 'libx264',
@@ -57,7 +57,7 @@ router.get('/presets', checkAdmin, (req: Request, res: Response, next: NextFunct
   res.json(presets);
 });
 
-router.post('/', checkAdmin, (req: Request, res: Response, next: NextFunction) => {
+router.post('/', checkAuthority('admin'), (req: Request, res: Response, next: NextFunction) => {
   (async function () {
     const inpath = req.body['inpath'];
     const outpath = req.body['outpath'];
@@ -72,7 +72,7 @@ router.post('/', checkAdmin, (req: Request, res: Response, next: NextFunction) =
   })().catch(next);
 });
 
-router.get('/status', checkAdmin, (req: Request, res: Response, next: NextFunction) => {
+router.get('/status', checkAuthority('admin'), (req: Request, res: Response, next: NextFunction) => {
   (async function () {
     const encodes: Encode[] = await Encode.findAll();
 

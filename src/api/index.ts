@@ -1,12 +1,15 @@
 import * as request from 'request';
 
-import { BACKEND_HOST } from '@src/config';
+import { FFMPEG_SERVER_KEY } from '@src/credentials';
 
 function send(url, method, payload): Promise<request.Response> {
   return new Promise((resolve, reject) => {
     const options = {
       url,
       method,
+      headers: {
+        'Authorization': `Bearer ${FFMPEG_SERVER_KEY}`
+      },
       json: payload
     };
 
@@ -23,7 +26,7 @@ function send(url, method, payload): Promise<request.Response> {
 
 
 export async function addMusic(title: string, path: string, duration: number, youtube: string, tags: string[], authority: string[]) {
-  const url = `${BACKEND_HOST}/musics`;
+  const url = `http://home.hyunsub.kim:8080/api/musics`;
   const method = `POST`;
   const payload = { title, path, duration, youtube, tags, authority };
   
