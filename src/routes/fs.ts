@@ -2,8 +2,11 @@ import { Router, Request, Response, NextFunction } from 'express';
 
 import * as fs from '@src/fs';
 import { Stat } from '@src/models';
+import { checkAuthority } from '@src/middlewares/validate-header';
 
 const router: Router = Router();
+
+router.use(checkAuthority('api'));
 
 router.get('/readdir', (req: Request, res: Response, next: NextFunction) => {
   (async () => {
@@ -60,6 +63,19 @@ router.post('/stat-bulk', (req: Request, res: Response, next: NextFunction) => {
     
     res.status(200);
     res.json(stats);
+  })().catch(next);
+})
+
+router.post('/unlink-bulk', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    const paths: string[] = req.body['paths'];
+    
+    for(const path of paths) {
+      await fs.unlink(path);
+    }
+    
+    res.status(204);
+    res.json();
   })().catch(next);
 })
 

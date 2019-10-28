@@ -15,6 +15,11 @@ export async function readdirWithFileTypes(path: string): Promise<fs.Dirent[]> {
   return await fsPromises.readdir(realPath, { withFileTypes: true });
 }
 
+export async function unlink(path: string): Promise<void> {
+  const realPath = join(ARCHIVE_PATH, path);
+  return await fsPromises.unlink(realPath);
+}
+
 export async function stat(path: string): Promise<Stat> {
   const realPath = join(ARCHIVE_PATH, path);
   const stat = await fsPromises.stat(realPath);
