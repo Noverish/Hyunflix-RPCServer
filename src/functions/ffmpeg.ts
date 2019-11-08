@@ -1,52 +1,39 @@
 import { spawn } from 'child_process';
+import { join } from 'path';
 
-export interface FFMpegStatus {
-  frame: number;
-  fps: number;
-  q: number;
-  size: number;
-  time: number;
-  bitrate: number;
-  speed: number;
-  eta: number;
-  progress: number;
-}
+import { FFMpegStatus } from '@src/models';
+import { ARCHIVE_PATH } from '@src/config';
 
-export function ffmpeg(args: string[], duration: number, callback: (FFMpegStatus) => void): Promise<void> {
+export function ffmpeg(args: string[], callback: (status: FFMpegStatus) => void): Promise<void> {
   return new Promise((resolve, reject) => {
+    const newArgs = args.map(v => {
+      if (v.startsWith('/') && v !== '/dev/null') {
+        return join(ARCHIVE_PATH, v);
+      }
+      return v;
+    });
+    
     let stdouts = '';
-    const ffmpeg = spawn('ffmpeg', args);
+    const ffmpeg = spawn('ffmpeg', newArgs);
     
     ffmpeg.stdout.on('data', (data) => {
       stdouts += data.toString();
     });
 
-    let beforeProgress = 0;
-    let beforeTime = Date.now();
     ffmpeg.stderr.on('data', (data) => {
       const status = extract(data.toString());
-      
       if (status) {
-        const nowProgress: number = parseFloat((status.time / duration * 100).toFixed(2));
-        const nowTime = Date.now();
-        
-        const progressPerMillis = (nowProgress - beforeProgress) / (nowTime - beforeTime);
-        const remainRaw = (100 - nowProgress) / (progressPerMillis * 1000)
-        const eta = parseFloat(remainRaw.toFixed(1));
-        
-        status.progress = nowProgress;
-        status.eta = eta;
         callback(status);
       } else {
         stdouts += data.toString();
       }
     });
 
-    ffmpeg.on('close', () => {
-      if(stdouts.includes('Conversion failed!')) {
-        reject(new Error(stdouts))
-      } else {
+    ffmpeg.on('exit', (code: number) => {
+      if(code === 0) {
         resolve();
+      } else {
+        reject(new Error(stdouts));
       }
     });
   });
@@ -61,16 +48,12 @@ function extract(data: string): FFMpegStatus | null {
     time: extractTime(data),
     bitrate: extractBitrate(data),
     speed: extractSpeed(data),
-    eta: -1,
-    progress: -1,
   };
   
   const values = Object.keys(tmp).map(k => tmp[k]);
-  
   if (values.every(v => v === -1)) {
     return null;
   }
-  
   return tmp;
 }
 
@@ -129,7 +112,8 @@ function extractTime(str: string): number {
     const n3 = parseInt(matches[2], 10);
     const n4 = parseInt(matches[3], 10);
     
-    return (n1 * 3600) + (n2 * 60) + n3 + (n4 / 100);
+    const tmp = (n1 * 3600) + (n2 * 60) + n3 + (n4 / 100);
+    return parseFloat(tmp.toFixed(2));
   } catch (err) {
     return -1;
   }

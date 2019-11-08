@@ -10,14 +10,21 @@ export async function readdir(path: string): Promise<string[]> {
   return await fsPromises.readdir(realPath);
 }
 
-export async function readdirWithFileTypes(path: string): Promise<fs.Dirent[]> {
-  const realPath = join(ARCHIVE_PATH, path);
-  return await fsPromises.readdir(realPath, { withFileTypes: true });
+export async function rename(from: string, to: string): Promise<void> {
+  const realFrom = join(ARCHIVE_PATH, from);
+  const realTo = join(ARCHIVE_PATH, to);
+  return await fsPromises.rename(realFrom, realTo);
 }
 
 export async function unlink(path: string): Promise<void> {
   const realPath = join(ARCHIVE_PATH, path);
   return await fsPromises.unlink(realPath);
+}
+
+export async function unlinkBulk(paths: string[]): Promise<void> {
+  for(const path of paths) {
+    await unlink(path);
+  }
 }
 
 export async function stat(path: string): Promise<Stat> {
@@ -31,36 +38,12 @@ export async function stat(path: string): Promise<Stat> {
   }
 }
 
-export async function access(path: string): Promise<string | null> {
-  const realPath = join(ARCHIVE_PATH, path);
-  try {
-    fsPromises.access(realPath);
-    return null;
-  } catch (err) {
-    return err.message;
+export async function statBulk(paths: string[]): Promise<Stat[]> {
+  const stats: Stat[] = [];
+  for(const path of paths) {
+    stats.push(await stat(path));
   }
-}
-
-export async function readdirStat(path: string): Promise<Stat[]> {
-  const files: fs.Dirent[] = await readdirWithFileTypes(path);
-  const results: Stat[] = [];
-
-  for (const f of files) {
-    const filePath = join(path, f.name);
-
-    if (f.isDirectory()) {
-      results.push({
-        isdir: true,
-        path: filePath,
-        name: f.name,
-        size: 0,
-      });
-    } else {
-      results.push(await stat(filePath));
-    }
-  }
-
-  return results;
+  return stats;
 }
 
 export async function walk(path: string): Promise<string[]> {

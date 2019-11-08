@@ -1,29 +1,30 @@
+import * as cp from 'child_process';
+
 export function escapeShellArg (arg) {
   return `'${arg.replace(/'/g, `'\\''`)}'`;
 }
 
+export function exec(command: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cp.exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(error.stack);
+      } else if(stderr) {
+        reject(stderr.trim());
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  })
+}
+
 export function dateToString(date: Date) {
-  const year = leadingZeros(date.getFullYear(), 4);
-  const month = leadingZeros(date.getMonth() + 1, 2);
-  const d = leadingZeros(date.getDate(), 2);
-  const hour = leadingZeros(date.getHours(), 2);
-  const minute = leadingZeros(date.getMinutes(), 2);
-  const second = leadingZeros(date.getSeconds(), 2);
+  const year  = date.getFullYear().toString().padStart(4, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day   = date.getDate().toString().padStart(2, '0');
+  const hour  = date.getHours().toString().padStart(2, '0');
+  const min   = date.getMinutes().toString().padStart(2, '0');
+  const sec   = date.getSeconds().toString().padStart(2, '0');
 
-  return `${year}-${month}-${d} ${hour}:${minute}:${second}`;
-}
-
-function leadingZeros(num: number, digits: number) {
-  let zero = '';
-  const n = num.toString();
-  if (n.length < digits) {
-    for (let i = 0; i < digits - n.length; i += 1) {
-      zero += '0';
-    }
-  }
-  return zero + n;
-}
-
-export function logger(...args: string[]) {
-  console.log(`[${dateToString(new Date())}]`, args.join(' '));
+  return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
 }

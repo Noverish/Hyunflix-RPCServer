@@ -1,23 +1,16 @@
 import { spawn } from 'child_process';
 
-import { DOWNLOAD_FOLDER, ARCHIVE_PATH } from '@src/config';
+import { YoutubeStatus } from '@src/models';
+import { ARCHIVE_PATH, DOWNLOAD_FOLDER } from '@src/config';
 
-export interface YoutubeStatus {
-  progress: number;
-  total: number;
-  speed: number;
-  eta: number;
-}
-
-export function download(url: string, isMusic: boolean, callback: (status: YoutubeStatus) => void): Promise<string | null> {
+export function downloadYoutube(url: string, callback: (status: YoutubeStatus) => void): Promise<string | null> {
   return new Promise((resolve, reject) => {
     let path: string | null = null;
-    
-    const format = isMusic ? 'bestaudio' : 'bestvideo[height<=720]'
+    let stdouts = '';
     
     // youtube-dl -f bestaudio --no-playlist --no-continue -o '/archive/Musics/download/%(title)s.%(ext)s'
     const options = [
-      '-f', format,
+      '-f', 'bestaudio',
       '--no-playlist',
       '--no-continue',
       '-o', `${DOWNLOAD_FOLDER}/%(title)s.%(ext)s`,
@@ -27,33 +20,36 @@ export function download(url: string, isMusic: boolean, callback: (status: Youtu
     const ffmpeg = spawn('youtube-dl', options);
     
     ffmpeg.stdout.on('data', (data) => {
-      const str = data.toString().trim();
-      
-      const tmp = extractPath(str);
-      if (tmp) {
-        path = tmp;
-      }
-      
+      const str = data.toString();
+      const _path = extractPath(str);
       const status = extractStatus(str);
-      if (status) {
+      
+      if (_path) {
+        path = _path;
+      } else if (status) {
         callback(status);
+      } else {
+        stdouts += str;
       }
     });
 
     ffmpeg.stderr.on('data', (data) => {
-      const str = data.toString().trim();
-      console.error(str);
+      stdouts += data.toString();
     });
 
-    ffmpeg.on('close', () => {
-      resolve(path);
+    ffmpeg.on('exit', (code: number) => {
+      if(code === 0) {
+        resolve(path);
+      } else {
+        reject(new Error(stdouts));
+      }
     });
   })
 }
 
 function extractPath(str: string): string | null {
   if (str.search(/Destination: .*/) >= 0) {
-    return str.match(/Destination: .*/)[0].replace('Destination: ', '');
+    return str.match(/Destination: .*/)[0].replace('Destination: ', '').replace(ARCHIVE_PATH, '');
   }
   return null;
 }
