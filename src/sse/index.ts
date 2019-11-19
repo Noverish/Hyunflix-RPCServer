@@ -1,40 +1,38 @@
-import * as http from 'http';
-import * as SSE from 'sse';
+import { createServer, IncomingMessage, ServerResponse} from 'http';
+import * as SSEStream from 'ssestream';
 
 import * as logger from '@src/utils/logger';
+import { SSE_SERVER_PORT } from '@src/config';
 
-const clients = new Map<string, SSE.Client>();
+const streams = new Map<string, SSEStream[]>();
 
-const server: http.Server = http.createServer((req, res) => {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('okay');
+const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  const stream = new SSEStream(req);
+  stream.pipe(res);
+  
+  const path: string = req.url;
+  
+  const arr: SSEStream[] = streams.get(path) || [];
+  arr.push(stream);
+  streams.set(path, arr);
+  logger.sse(path, `Connected from ${req.socket.remoteAddress}`);
+  
+  req.socket.on('close', () => {
+    const arr: SSEStream[] = streams.get(path) || [];
+    arr.splice(arr.indexOf(stream), 1);
+    streams.set(path, arr);
+    logger.sse(path, `Disconnected from ${req.socket.remoteAddress}`);
+  });
+})
+
+server.listen(SSE_SERVER_PORT, () => {
+  console.log(`*** SSE Server Started at ${SSE_SERVER_PORT} !!!`);
 });
 
-server.listen(8124);
-
-export function createServer(path: string) {
-  const sse = new SSE(server, { path });
-  sse.on('connection', (client: SSE.Client) => {
-    close(path);
-    clients.set(path, client);
-    
-    client.on('close', () => {
-      clients.delete(path);
-    })
-  });
-}
-
-export function send(path: string, payload: object) {
-  logger.sse(path, payload);
-  const client = clients.get(path);
-  if (client) {
-    client.send(JSON.stringify(payload))
-  }
-}
-
-export function close(path: string) {
-  const client = clients.get(path);
-  if (client) {
-    client.close();
-  }
+export function send(path: string, data: object | string) {
+  logger.sse(path, data);
+  const arr = streams.get(path) || [];
+  arr.forEach(stream => stream.write({ data }));
 }
