@@ -5,9 +5,8 @@ const NOT_EXIST_ERROR = 'ffmpeg process does not exist';
 const getPidList = async () => (await exec('pgrep ffmpeg || true')).match(/\d+/g);
 const getProcessState = async (pid: string) => await exec(`ps -o stat= -p ${pid}`);
 const getActivePid = async () => {
-  const pids = await getPidList();
+  const pids = (await getPidList()) || [];
   const states = await Promise.all(pids.map(pid => getProcessState(pid)));
-  console.log(pids, states);
   return pids.filter((_, i) => states[i] !== 'Z')[0];
 }
 
