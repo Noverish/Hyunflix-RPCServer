@@ -31,8 +31,14 @@ server.listen(SSE_SERVER_PORT, () => {
   console.log(`*** SSE Server Started at ${SSE_SERVER_PORT} !!!`);
 });
 
-export function send(path: string, data: object | string) {
+export function send(path: string, data: object | string, event?: string) {
   logger.sse(path, data);
   const arr = streams.get(path) || [];
-  arr.forEach(stream => stream.write({ data }));
+  arr.forEach(stream => stream.write({ data, event }));
+}
+
+export function close(path: string) {
+  logger.sse(path, '[CLOSE]');
+  const arr = streams.get(path) || [];
+  arr.forEach(stream => stream.end());
 }

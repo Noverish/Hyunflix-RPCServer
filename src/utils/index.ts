@@ -28,7 +28,3 @@ export function dateToString(date: Date) {
 
   return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
 }
-
-export function sleep(ms): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}

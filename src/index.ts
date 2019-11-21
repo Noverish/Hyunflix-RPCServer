@@ -1,15 +1,13 @@
 import * as jayson from 'jayson';
 import { send } from '@src/sse';
-import "reflect-metadata";
 
-// import { ffmpeg } from '@src/functions/ffmpeg';
+import { ffmpeg } from '@src/functions/ffmpeg';
 import { ffprobeVideo, ffprobeMusic } from '@src/functions/ffprobe';
 import { readdir, rename, unlink, unlinkBulk, stat, statBulk, walk } from '@src/functions/fs';
 import { ffmpegExist, ffmpegState, ffmpegPause, ffmpegResume } from '@src/functions/ffstate';
 import { subtitle } from '@src/functions/subtitle';
 import { downloadYoutube } from '@src/functions/youtube';
 import * as logger from '@src/utils/logger';
-import startEncode from '@src/workers/start-encode';
 import { RPC_SERVER_PORT } from '@src/config';
 
 function call(promiseCallback: (args: any) => Promise<any>) {
@@ -22,18 +20,19 @@ function call(promiseCallback: (args: any) => Promise<any>) {
         callback(null, result);
       })
       .catch(error => {
+        const errStr = error.toString();
         const err = {
-          code: error.toString().length,
-          message: error.toString(),
+          code: errStr.length,
+          message: errStr,
         };
-        logger.rpc(name, JSON.stringify(args), err.message);
+        logger.rpc(name, JSON.stringify(args), errStr);
         callback(err, null);
       });
   };
 }
 
 const jaysonServer = new jayson.Server({
-  // ffmpeg:       call((args) => ffmpeg(args.args, (status) => { send('/ffmpeg', status) })),
+  ffmpeg:       call((args) => ffmpeg(args.inpath, args.outpath, args.args)),
   ffmpegExist:  call(() => ffmpegExist()),
   ffmpegState:  call(() => ffmpegState()),
   ffmpegPause:  call(() => ffmpegPause()),
@@ -56,5 +55,3 @@ const jaysonServer = new jayson.Server({
 
 jaysonServer.http().listen(RPC_SERVER_PORT);
 console.log(`*** RPC Server Started at ${RPC_SERVER_PORT} !!!`);
-
-startEncode();

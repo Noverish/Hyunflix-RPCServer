@@ -6,11 +6,6 @@ export interface FFMpegStatus {
   time: number;
   bitrate: number;
   speed: number;
-}
-
-export interface EncodeStatus {
-  encodeId: number;
-  eta: number;
-  speed: number;
   progress: number;
+  eta: number;
 }

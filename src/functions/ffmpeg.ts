@@ -1,59 +1,75 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
 
-import { FFMpegStatus } from '@src/models';
+import { ffprobeVideo } from '@src/functions/ffprobe';
+import { FFMpegStatus, FFProbeVideo } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
+import { send, close } from '@src/sse';
 
-export function ffmpeg(args: string[], callback: (status: FFMpegStatus) => void): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const newArgs = args.map(v => {
-      if (v.startsWith('/') && v !== '/dev/null') {
-        return join(ARCHIVE_PATH, v);
-      }
-      return v;
-    });
-    
-    let stdouts = '';
-    const ffmpeg = spawn('ffmpeg', newArgs);
-    
-    ffmpeg.stdout.on('data', (data) => {
-      stdouts += data.toString();
-    });
+const STATUS_EVENT = 'status';
+const FINISH_EVENT = 'finish';
+const ERROR_EVENT = 'error';
 
-    ffmpeg.stderr.on('data', (data) => {
-      const status = extract(data.toString());
-      if (status) {
-        callback(status);
-      } else {
-        stdouts += data.toString();
-      }
-    });
-
-    ffmpeg.on('exit', (code: number) => {
-      if(code === 0) {
-        resolve();
-      } else {
-        reject(new Error(stdouts));
-      }
-    });
+export async function ffmpeg(inpath: string, outpath: string, args: string[]): Promise<number> {
+  const { duration }: FFProbeVideo = await ffprobeVideo(inpath);
+  
+  const realInpath = join(ARCHIVE_PATH, inpath);
+  const realOutpath = (outpath === '/dev/null') ? outpath : join(ARCHIVE_PATH, outpath);
+  const args2 = [
+    '-i', realInpath,
+    ...args,
+    realOutpath,
+  ]
+  
+  let stdouts = '';
+  const ffmpeg = spawn('ffmpeg', args2);
+  const ssePath = `/ffmpeg/${ffmpeg.pid}`;
+  
+  ffmpeg.stdout.on('data', (data) => {
+    stdouts += data.toString();
   });
+
+  ffmpeg.stderr.on('data', (data) => {
+    const status = extract(duration, data.toString());
+    if (status) {
+      send(ssePath, status, STATUS_EVENT);
+    } else {
+      stdouts += data.toString();
+    }
+  });
+
+  ffmpeg.on('exit', (code: number) => {
+    send(ssePath, stdouts, (code === 0) ? FINISH_EVENT : ERROR_EVENT);
+    close(ssePath);
+  });
+  
+  return ffmpeg.pid;
 }
 
-function extract(data: string): FFMpegStatus | null {
+function extract(duration: number, data: string): FFMpegStatus | null {
+  const time = extractTime(data);
+  const speed = extractSpeed(data);
+  
+  if (time <= 0 || speed <= 0) {
+    return null;
+  }
+  
+  const progress = parseFloat((time / duration * 100).toFixed(2));
+  const etaRaw = (duration - time) / speed;
+  const eta = parseFloat(etaRaw.toFixed(1));
+  
   const tmp: FFMpegStatus = {
+    time,
+    speed,
+    progress,
+    eta,
     frame: extractFrame(data),
     fps: extractFPS(data),
     q: extractQ(data),
     size: extractSize(data),
-    time: extractTime(data),
     bitrate: extractBitrate(data),
-    speed: extractSpeed(data),
   };
   
-  const values = Object.keys(tmp).map(k => tmp[k]);
-  if (values.every(v => v === -1)) {
-    return null;
-  }
   return tmp;
 }
 
