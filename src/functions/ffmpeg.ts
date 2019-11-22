@@ -4,7 +4,7 @@ import { join } from 'path';
 import { ffprobeVideo } from '@src/functions/ffprobe';
 import { FFMpegStatus, FFProbeVideo } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
-import { send, close } from '@src/sse';
+import { send } from '@src/sse';
 
 const STATUS_EVENT = 'status';
 const FINISH_EVENT = 'finish';
@@ -39,8 +39,11 @@ export async function ffmpeg(inpath: string, outpath: string, args: string[]): P
   });
 
   ffmpeg.on('exit', (code: number) => {
-    send(ssePath, stdouts, (code === 0) ? FINISH_EVENT : ERROR_EVENT);
-    close(ssePath);
+    if (code === 0) {
+      send(ssePath, FINISH_EVENT, FINISH_EVENT);
+    } else {
+      send(ssePath, stdouts, ERROR_EVENT);
+    }
   });
   
   return ffmpeg.pid;

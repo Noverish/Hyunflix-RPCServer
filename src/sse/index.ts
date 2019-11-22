@@ -36,9 +36,3 @@ export function send(path: string, data: object | string, event?: string) {
   const arr = streams.get(path) || [];
   arr.forEach(stream => stream.write({ data, event }));
 }
-
-export function close(path: string) {
-  logger.sse(path, '[CLOSE]');
-  const arr = streams.get(path) || [];
-  arr.forEach(stream => stream.end());
-}
