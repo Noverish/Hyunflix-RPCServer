@@ -6,7 +6,7 @@ import { ffprobeVideo, ffprobeMusic } from '@src/functions/ffprobe';
 import { readdir, rename, unlink, unlinkBulk, stat, statBulk, walk } from '@src/functions/fs';
 import { ffmpegExist, ffmpegState, ffmpegPause, ffmpegResume } from '@src/functions/ffstate';
 import { subtitle } from '@src/functions/subtitle';
-import { downloadYoutube } from '@src/functions/youtube';
+import { downloadYoutube, listYoutubePlaylist } from '@src/functions/youtube';
 import * as logger from '@src/utils/logger';
 import { RPC_SERVER_PORT } from '@src/config';
 
@@ -20,7 +20,7 @@ function call(promiseCallback: (args: any) => Promise<any>) {
         callback(null, result);
       })
       .catch(error => {
-        const errStr = error.toString();
+        const errStr = error.stack || error.toString();
         const err = {
           code: errStr.length,
           message: errStr,
@@ -50,7 +50,8 @@ const jaysonServer = new jayson.Server({
   
   subtitle: call((args) => subtitle(args.path)),
   
-  downloadYoutube : call((args) => downloadYoutube(args.url, (status) => { send('/youtube', status) })),
+  listYoutubePlaylist: call((args)=> listYoutubePlaylist(args.url)),
+  downloadYoutube :    call((args) => downloadYoutube(args.url, (status) => { send('/youtube', status) })),
 });
 
 jaysonServer.http().listen(RPC_SERVER_PORT);

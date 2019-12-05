@@ -9,10 +9,12 @@ export function exec(command: string): Promise<string> {
     cp.exec(command, (error, stdout, stderr) => {
       if (error) {
         reject(error.stack);
-      } else if(stderr) {
+      } else if (stdout) {
+        resolve(stdout.trim());
+      } else if (stderr) {
         reject(stderr.trim());
       } else {
-        resolve(stdout.trim());
+        resolve('');
       }
     });
   })

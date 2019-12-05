@@ -1,7 +1,17 @@
 import { spawn } from 'child_process';
 
-import { YoutubeStatus } from '@src/models';
+import { YoutubeStatus, YoutubeInfo } from '@src/models';
 import { ARCHIVE_PATH, DOWNLOAD_FOLDER } from '@src/config';
+import { exec } from '@src/utils';
+
+export async function listYoutubePlaylist(url: string): Promise<YoutubeInfo[]> {
+  return (await exec(`youtube-dl -j --flat-playlist ${url}`))
+    .split('\n')
+    .map((line: string) => {
+      const info = JSON.parse(line);
+      return { id: info.id, title: info.title };
+    });
+}
 
 export function downloadYoutube(url: string, callback: (status: YoutubeStatus) => void): Promise<string | null> {
   return new Promise((resolve, reject) => {

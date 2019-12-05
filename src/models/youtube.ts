@@ -4,3 +4,8 @@ export interface YoutubeStatus {
   speed: number;
   eta: number;
 }
+
+export interface YoutubeInfo {
+  title: string;
+  id: string;
+}

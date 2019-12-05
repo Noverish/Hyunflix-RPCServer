@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
 
-import { ffprobeVideo } from '@src/functions/ffprobe';
-import { FFMpegStatus, FFProbeVideo } from '@src/models';
+import { ffprobeCommon } from '@src/functions/ffprobe';
+import { FFMpegStatus, FFProbeCommon } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
 import { send } from '@src/sse';
 
@@ -11,7 +11,7 @@ const FINISH_EVENT = 'finish';
 const ERROR_EVENT = 'error';
 
 export async function ffmpeg(inpath: string, outpath: string, args: string[]): Promise<number> {
-  const { duration }: FFProbeVideo = await ffprobeVideo(inpath);
+  const { duration }: FFProbeCommon = await ffprobeCommon(inpath);
   
   const realInpath = join(ARCHIVE_PATH, inpath);
   const realOutpath = (outpath === '/dev/null') ? outpath : join(ARCHIVE_PATH, outpath);

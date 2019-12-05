@@ -10,7 +10,7 @@ async function probe(path: string): Promise<RawProbed> {
   return JSON.parse(result);
 }
 
-function parseFFProbe(probed: RawProbed): FFProbeCommon {
+function parseFFProbeCommon(probed: RawProbed): FFProbeCommon {
   const format = probed['format'];
   
   const duration: number = parseFloat(format['duration']);
@@ -21,7 +21,7 @@ function parseFFProbe(probed: RawProbed): FFProbeCommon {
 }
 
 function parseFFProbeVideo(probed: RawProbed): FFProbeVideo {
-  const ffprobe: FFProbeCommon = parseFFProbe(probed);
+  const ffprobe: FFProbeCommon = parseFFProbeCommon(probed);
   const stream = probed['streams'].find(s => s['codec_type'] === 'video');
   
   const width = parseInt(stream['width']);
@@ -35,8 +35,14 @@ function parseFFProbeVideo(probed: RawProbed): FFProbeVideo {
 }
 
 function parseFFProbeMusic(probed: RawProbed): FFProbeMusic {
-  const ffprobe: FFProbeCommon = parseFFProbe(probed);
+  const ffprobe: FFProbeCommon = parseFFProbeCommon(probed);
   return ffprobe;
+}
+
+export async function ffprobeCommon(path: string): Promise<FFProbeCommon> {
+  const realPath = join(ARCHIVE_PATH, path);
+  const probed: RawProbed = await probe(realPath);
+  return parseFFProbeCommon(probed);
 }
 
 export async function ffprobeVideo(path: string): Promise<FFProbeVideo> {
