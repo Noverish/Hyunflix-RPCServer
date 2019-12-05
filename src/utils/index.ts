@@ -1,7 +1,7 @@
 import * as cp from 'child_process';
 
-export function escapeShellArg (arg) {
-  return `'${arg.replace(/'/g, `'\\''`)}'`;
+export function escapeShellArg(arg) {
+  return `'${arg.replace(/'/g, "'\\''")}'`;
 }
 
 export function exec(command: string): Promise<string> {
@@ -17,7 +17,7 @@ export function exec(command: string): Promise<string> {
         resolve('');
       }
     });
-  })
+  });
 }
 
 export function dateToString(date: Date) {

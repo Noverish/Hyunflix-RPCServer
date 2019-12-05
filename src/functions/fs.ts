@@ -13,13 +13,13 @@ export async function readdir(path: string): Promise<string[]> {
 export async function rename(from: string, to: string): Promise<void> {
   const realFrom = join(ARCHIVE_PATH, from);
   const realTo = join(ARCHIVE_PATH, to);
-  
+
   try {
     await fsPromises.access(dirname(realTo));
   } catch (error) {
     await fsPromises.mkdir(dirname(realTo), { recursive: true });
   }
-  
+
   return await fsPromises.rename(realFrom, realTo);
 }
 
@@ -29,7 +29,7 @@ export async function unlink(path: string): Promise<void> {
 }
 
 export async function unlinkBulk(paths: string[]): Promise<void> {
-  for(const path of paths) {
+  for (const path of paths) {
     await unlink(path);
   }
 }
@@ -42,12 +42,12 @@ export async function stat(path: string): Promise<Stat> {
     name: basename(path),
     size: stat.size,
     isdir: stat.isDirectory(),
-  }
+  };
 }
 
 export async function statBulk(paths: string[]): Promise<Stat[]> {
   const stats: Stat[] = [];
-  for(const path of paths) {
+  for (const path of paths) {
     stats.push(await stat(path));
   }
   return stats;

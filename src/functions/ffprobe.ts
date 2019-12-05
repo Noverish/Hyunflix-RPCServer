@@ -12,26 +12,26 @@ async function probe(path: string): Promise<RawProbed> {
 
 function parseFFProbeCommon(probed: RawProbed): FFProbeCommon {
   const format = probed['format'];
-  
+
   const duration: number = parseFloat(format['duration']);
   const bitrate: number = parseInt(format['bit_rate']);
   const size: number = parseInt(format['size']);
-  
-  return { duration, bitrate, size }
+
+  return { duration, bitrate, size };
 }
 
 function parseFFProbeVideo(probed: RawProbed): FFProbeVideo {
   const ffprobe: FFProbeCommon = parseFFProbeCommon(probed);
   const stream = probed['streams'].find(s => s['codec_type'] === 'video');
-  
+
   const width = parseInt(stream['width']);
   const height = parseInt(stream['height']);
-  
+
   return {
     ...ffprobe,
     width,
-    height
-  }
+    height,
+  };
 }
 
 function parseFFProbeMusic(probed: RawProbed): FFProbeMusic {

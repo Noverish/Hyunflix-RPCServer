@@ -10,9 +10,9 @@ const tests = [
   {
     title: '[MV] IU(아이유) _ Blueming(블루밍)',
     url: 'https://www.youtube.com/watch?v=D1PvIWdJ8xo',
-    expected: '/Musics/download/[MV] IU(아이유) _ Blueming(블루밍).webm'
+    expected: '/Musics/download/[MV] IU(아이유) _ Blueming(블루밍).webm',
   },
-]
+];
 
 describe('downloadYoutube', () => {
   for (const test of tests) {
@@ -22,6 +22,6 @@ describe('downloadYoutube', () => {
         assert.hasAllKeys(status, STATUS_MOCK);
       });
       assert.deepEqual(path, test.expected);
-    })
+    });
   }
-})
+});

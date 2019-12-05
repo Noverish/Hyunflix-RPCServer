@@ -13,13 +13,13 @@ import { RPC_SERVER_PORT } from '@src/config';
 function call(promiseCallback: (args: any) => Promise<any>) {
   return (args, callback) => {
     const name = promiseCallback.toString().match(/\.[^(]*/)[0].substr(1);
-    
+
     promiseCallback(args)
       .then((result) => {
         logger.rpc(name, JSON.stringify(args), JSON.stringify(result));
         callback(null, result);
       })
-      .catch(error => {
+      .catch((error) => {
         const errStr = error.stack || error.toString();
         const err = {
           code: errStr.length,
@@ -32,26 +32,26 @@ function call(promiseCallback: (args: any) => Promise<any>) {
 }
 
 const jaysonServer = new jayson.Server({
-  ffmpeg:       call((args) => ffmpeg(args.inpath, args.outpath, args.args)),
+  ffmpeg:       call(args => ffmpeg(args.inpath, args.outpath, args.args)),
   ffmpegExist:  call(() => ffmpegExist()),
   ffmpegState:  call(() => ffmpegState()),
   ffmpegPause:  call(() => ffmpegPause()),
   ffmpegResume: call(() => ffmpegResume()),
-  ffprobeVideo: call((args) => ffprobeVideo(args.path)),
-  ffprobeMusic: call((args) => ffprobeMusic(args.path)),
-  
-  readdir:    call((args) => readdir(args.path)),
-  rename:     call((args) => rename(args.from, args.to)),
-  unlink:     call((args) => unlink(args.path)),
-  unlinkBulk: call((args) => unlinkBulk(args.paths)),
-  stat:       call((args) => stat(args.path)),
-  statBulk:   call((args) => statBulk(args.paths)),
-  walk:       call((args) => walk(args.path)),
-  
-  subtitle: call((args) => subtitle(args.path)),
-  
-  getYoutubePlaylist: call((args)=> getYoutubePlaylist(args.url)),
-  downloadYoutube :    call((args) => downloadYoutube(args.url, (status) => { send('/youtube', status) })),
+  ffprobeVideo: call(args => ffprobeVideo(args.path)),
+  ffprobeMusic: call(args => ffprobeMusic(args.path)),
+
+  readdir:    call(args => readdir(args.path)),
+  rename:     call(args => rename(args.from, args.to)),
+  unlink:     call(args => unlink(args.path)),
+  unlinkBulk: call(args => unlinkBulk(args.paths)),
+  stat:       call(args => stat(args.path)),
+  statBulk:   call(args => statBulk(args.paths)),
+  walk:       call(args => walk(args.path)),
+
+  subtitle:   call(args => subtitle(args.path)),
+
+  getYoutubePlaylist: call(args => getYoutubePlaylist(args.url)),
+  downloadYoutube :    call(args => downloadYoutube(args.url, (status) => { send('/youtube', status); })),
 });
 
 jaysonServer.http().listen(RPC_SERVER_PORT);

@@ -17,7 +17,7 @@ export function downloadYoutube(url: string, callback: (status: YoutubeStatus) =
   return new Promise((resolve, reject) => {
     let path: string | null = null;
     let stdouts = '';
-    
+
     // youtube-dl -f bestaudio --no-playlist --no-continue -o '/archive/Musics/download/%(title)s.%(ext)s'
     const options = [
       '-f', 'bestaudio',
@@ -25,17 +25,17 @@ export function downloadYoutube(url: string, callback: (status: YoutubeStatus) =
       '--no-continue',
       '-o', `${DOWNLOAD_FOLDER}/%(title)s.%(ext)s`,
       url,
-    ]
-    
+    ];
+
     const ffmpeg = spawn('youtube-dl', options);
-    
+
     ffmpeg.stdout.on('data', (data) => {
       const str = data.toString();
-      const _path = extractPath(str);
+      const tmpPath = extractPath(str);
       const status = extractStatus(str);
-      
-      if (_path) {
-        path = _path;
+
+      if (tmpPath) {
+        path = tmpPath;
       } else if (status) {
         callback(status);
       } else {
@@ -48,13 +48,13 @@ export function downloadYoutube(url: string, callback: (status: YoutubeStatus) =
     });
 
     ffmpeg.on('exit', (code: number) => {
-      if(code === 0) {
+      if (code === 0) {
         resolve(path);
       } else {
         reject(new Error(stdouts));
       }
     });
-  })
+  });
 }
 
 function extractPath(str: string): string | null {
@@ -70,34 +70,33 @@ function extractStatus(str: string): YoutubeStatus | null {
     total: -1,
     speed: -1,
     eta: -1,
-  }
-  
+  };
+
   const progressMatches = str.match(/[.\d]*%/);
   if (progressMatches) {
     tmp.progress = parseFloat(progressMatches[0].replace(/[^.\d]/g, ''));
   }
-  
+
   const totalMatches = str.match(/of [.\d]*MiB/);
   if (totalMatches) {
     tmp.total = parseFloat(totalMatches[0].replace(/[^.\d]/g, ''));
   }
-  
+
   const speedMatches = str.match(/[.\d]*MiB\/s/);
   if (speedMatches) {
     tmp.speed = parseFloat(speedMatches[0].replace(/[^.\d]/g, ''));
   }
-  
+
   const etaMatches = str.match(/ETA [\d]{2}:[\d]{2}/);
   if (etaMatches && etaMatches[0].split(':').length === 2) {
     const min = parseInt(etaMatches[0].split(':')[0].replace(/[^.\d]/g, ''));
     const sec = parseInt(etaMatches[0].split(':')[1].replace(/[^.\d]/g, ''));
     tmp.eta = min * 60 + sec;
   }
-  
+
   const keys = Object.keys(tmp);
   if (keys.every(k => tmp[k] >= 0)) {
     return tmp;
-  } else {
-    return null;
   }
+  return null;
 }

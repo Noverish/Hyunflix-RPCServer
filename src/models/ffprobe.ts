@@ -12,5 +12,5 @@ export interface FFProbeVideo extends FFProbeCommon {
 }
 
 export interface FFProbeMusic extends FFProbeCommon {
-  
+
 }
