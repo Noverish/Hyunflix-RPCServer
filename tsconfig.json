@@ -4,10 +4,14 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "lib": ["es6", "dom", "es2017"],
-    "baseUrl": ".",                   // absolute path
-    "paths": {"@src/*" : ["./src/*"]},// absolute path
+    "baseUrl": ".",                  // absolute path
+    "paths": {                       // absolute path
+      "@src/*" : ["./src/*"],
+      "@test/*": ["./test/*"]
+    },
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test/**/*"
   ]
 }
