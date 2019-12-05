@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { join, basename } from 'path';
+import { join, basename, dirname } from 'path';
 
 import { Stat } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
@@ -13,6 +13,13 @@ export async function readdir(path: string): Promise<string[]> {
 export async function rename(from: string, to: string): Promise<void> {
   const realFrom = join(ARCHIVE_PATH, from);
   const realTo = join(ARCHIVE_PATH, to);
+  
+  try {
+    await fsPromises.access(dirname(realTo));
+  } catch (error) {
+    await fsPromises.mkdir(dirname(realTo), { recursive: true });
+  }
+  
   return await fsPromises.rename(realFrom, realTo);
 }
 
