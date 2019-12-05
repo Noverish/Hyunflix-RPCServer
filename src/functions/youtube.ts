@@ -4,7 +4,7 @@ import { YoutubeStatus, YoutubeInfo } from '@src/models';
 import { ARCHIVE_PATH, DOWNLOAD_FOLDER } from '@src/config';
 import { exec } from '@src/utils';
 
-export async function listYoutubePlaylist(url: string): Promise<YoutubeInfo[]> {
+export async function getYoutubePlaylist(url: string): Promise<YoutubeInfo[]> {
   return (await exec(`youtube-dl -j --flat-playlist ${url}`))
     .split('\n')
     .map((line: string) => {

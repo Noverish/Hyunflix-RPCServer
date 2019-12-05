@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import 'mocha';
 
-import { listYoutubePlaylist } from '@src/functions/youtube';
+import { getYoutubePlaylist } from '@src/functions/youtube';
 
 const tests = [
   {
@@ -16,11 +16,11 @@ const tests = [
   },
 ]
 
-describe('listYoutubePlaylist', () => {
+describe('getYoutubePlaylist', () => {
   for (const test of tests) {
     it(test.title, async function () {
       this.timeout(0);
-      const items = await listYoutubePlaylist(test.url);
+      const items = await getYoutubePlaylist(test.url);
       assert.deepEqual(items, test.expected);
     })
   }
