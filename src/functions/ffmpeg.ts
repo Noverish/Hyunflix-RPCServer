@@ -10,7 +10,11 @@ const STATUS_EVENT = 'status';
 const FINISH_EVENT = 'finish';
 const ERROR_EVENT = 'error';
 
-export async function ffmpeg(inpath: string, outpath: string, args: string[]): Promise<number> {
+export async function ffmpeg(inpath: string,
+                             outpath: string,
+                             args: string[],
+                             callback: (pid: number, event: string, status: FFMpegStatus | string) => void): Promise<number> {
+
   const { duration }: FFProbeCommon = await ffprobeCommon(inpath);
 
   const realInpath = join(ARCHIVE_PATH, inpath);
@@ -23,7 +27,6 @@ export async function ffmpeg(inpath: string, outpath: string, args: string[]): P
 
   let stdouts = '';
   const ffmpeg = spawn('ffmpeg', args2);
-  const ssePath = `/ffmpeg/${ffmpeg.pid}`;
 
   ffmpeg.stdout.on('data', (data) => {
     stdouts += data.toString();
@@ -32,7 +35,7 @@ export async function ffmpeg(inpath: string, outpath: string, args: string[]): P
   ffmpeg.stderr.on('data', (data) => {
     const status = extract(duration, data.toString());
     if (status) {
-      send(ssePath, status, STATUS_EVENT);
+      callback(ffmpeg.pid, STATUS_EVENT, status);
     } else {
       stdouts += data.toString();
     }
@@ -40,9 +43,9 @@ export async function ffmpeg(inpath: string, outpath: string, args: string[]): P
 
   ffmpeg.on('exit', (code: number) => {
     if (code === 0) {
-      send(ssePath, FINISH_EVENT, FINISH_EVENT);
+      callback(ffmpeg.pid, FINISH_EVENT, FINISH_EVENT);
     } else {
-      send(ssePath, stdouts, ERROR_EVENT);
+      callback(ffmpeg.pid, ERROR_EVENT, stdouts);
     }
   });
 

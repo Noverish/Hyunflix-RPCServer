@@ -32,7 +32,7 @@ function call(promiseCallback: (args: any) => Promise<any>) {
 }
 
 const jaysonServer = new jayson.Server({
-  ffmpeg:       call(args => ffmpeg(args.inpath, args.outpath, args.args)),
+  ffmpeg:       call(args => ffmpeg(args.inpath, args.outpath, args.args, (pid, event, status) => { send(`/ffmpeg/${pid}`, status, event) })),
   ffmpegExist:  call(() => ffmpegExist()),
   ffmpegState:  call(() => ffmpegState()),
   ffmpegPause:  call(() => ffmpegPause()),
