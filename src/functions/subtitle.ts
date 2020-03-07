@@ -10,33 +10,28 @@ export async function subtitle(path: string): Promise<Subtitle[]> {
     throw new Error(`'${path}' is not mp4`);
   }
 
-  const dirPath = dirname(path);
-  const files = await readdir(dirPath);
-  const subtitles: Subtitle[] = [];
+  const videoDirPath = dirname(path);
+  const videoName = parse(path).name;
 
-  for (const file of files) {
-    const { name, ext } = parse(file);
+  return (await readdir(videoDirPath))
+    .filter(f => f.startsWith(videoName))
+    .filter(f => subtitleExtList.includes(extname(f)))
+    .map((f): Subtitle => {
+      const fileName = parse(f).name;
+      const language = fileName.replace(videoName, '').replace(/\./g, '');
 
-    if (name === parse(path).name && subtitleExtList.includes(ext)) {
-      subtitles.push({
-        language: 'ko',
-        path: join(dirPath, `${name}.vtt`),
-      });
-    }
-  }
-
-  // There is no subtitle file which name is same as video name
-  if (subtitles.length === 0) {
-    for (const file of files) {
-      const { name, ext } = parse(file);
-      if (subtitleExtList.includes(ext)) {
-        subtitles.push({
-          language: name,
-          path: join(dirPath, `${name}.vtt`),
-        });
+      return {
+        path: join(videoDirPath, `${fileName}.vtt`),
+        language: (language === '') ? 'default' : language,
+      };
+    })
+    .sort((a, b) => {
+      if (a.language === 'default') {
+        return -1;
       }
-    }
-  }
-
-  return subtitles;
+      if (b.language === 'default') {
+        return 1;
+      }
+      return 0;
+    });
 }
