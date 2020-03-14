@@ -3,10 +3,10 @@ import { exec } from '@src/utils';
 const NOT_EXIST_ERROR = 'ffmpeg process does not exist';
 
 const getPidList = async () => (await exec('pgrep ffmpeg || true')).match(/\d+/g);
-const getProcessState = async (pid: string) => await exec(`ps -o stat= -p ${pid}`);
+const getProcessState = (pid: string) => exec(`ps -o stat= -p ${pid}`);
 const getActivePid = async () => {
   const pids = (await getPidList()) || [];
-  const states = await Promise.all(pids.map(pid => getProcessState(pid)));
+  const states = await Promise.all(pids.map((pid) => getProcessState(pid)));
   return pids.filter((_, i) => states[i] !== 'Z')[0];
 };
 

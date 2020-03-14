@@ -1,7 +1,9 @@
 import { join } from 'path';
 
 import { escapeShellArg, exec } from '@src/utils';
-import { RawProbed, FFProbeCommon, FFProbeVideo, FFProbeMusic } from '@src/models';
+import {
+  RawProbed, FFProbeCommon, FFProbeVideo, FFProbeMusic,
+} from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
 
 async function probe(path: string): Promise<RawProbed> {
@@ -11,21 +13,21 @@ async function probe(path: string): Promise<RawProbed> {
 }
 
 function parseFFProbeCommon(probed: RawProbed): FFProbeCommon {
-  const format = probed['format'];
+  const { format } = probed;
 
-  const duration: number = parseFloat(format['duration']);
-  const bitrate: number = parseInt(format['bit_rate']);
-  const size: number = parseInt(format['size']);
+  const duration: number = parseFloat(format.duration);
+  const bitrate: number = parseInt(format.bit_rate);
+  const size: number = parseInt(format.size);
 
   return { duration, bitrate, size };
 }
 
 function parseFFProbeVideo(probed: RawProbed): FFProbeVideo {
   const ffprobe: FFProbeCommon = parseFFProbeCommon(probed);
-  const stream = probed['streams'].find(s => s['codec_type'] === 'video');
+  const stream = probed.streams.find((s) => s.codec_type === 'video');
 
-  const width = parseInt(stream['width']);
-  const height = parseInt(stream['height']);
+  const width = parseInt(stream.width);
+  const height = parseInt(stream.height);
 
   return {
     ...ffprobe,

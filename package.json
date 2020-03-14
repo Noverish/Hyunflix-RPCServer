@@ -1,33 +1,42 @@
 {
-  "name": "ffmpeg",
+  "name": "Hyunflix-RPCServer",
   "version": "1.0.0",
-  "description": "",
+  "description": ".",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register src/index.ts",
     "dev": "nodemon --exec 'ts-node -r tsconfig-paths/register' --watch 'src/**/*.ts' src/index.ts",
-    "test": "mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/*.spec.ts\"",
-    "tslint": "tslint -p .",
-    "tslint:fix": "tslint -p . --fix"
+    "start": "ts-node -r tsconfig-paths/register src/index.ts",
+    "check": "tsc --noEmit",
+    "test": "mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/*.ts\"",
+    "eslint": "eslint 'src/**/*.ts'",
+    "eslint:fix": "eslint 'src/**/*.ts' --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Noverish/Hyunflix-RPCServer.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "jayson": "^3.2.0",
+    "ssestream": "^1.0.1"
+  },
   "devDependencies": {
     "@types/chai": "^4.2.10",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.23.0",
+    "@typescript-eslint/parser": "^2.23.0",
     "chai": "^4.2.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-typescript": "^7.0.0",
+    "eslint-import-resolver-typescript": "^2.0.0",
+    "eslint-plugin-import": "^2.20.1",
     "mocha": "^7.1.0",
     "nodemon": "^2.0.2",
     "ts-node": "^8.6.2",
     "tsconfig-paths": "^3.9.0",
-    "tslint": "^5.20.1",
-    "tslint-config-airbnb": "^5.11.2",
     "typescript": "^3.8.3"
-  },
-  "dependencies": {
-    "jayson": "^3.2.0",
-    "ssestream": "^1.0.1"
   }
 }

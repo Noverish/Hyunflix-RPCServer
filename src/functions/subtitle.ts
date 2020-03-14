@@ -1,11 +1,13 @@
-import { join, extname, dirname, parse } from 'path';
+import {
+  join, extname, dirname, parse,
+} from 'path';
 
-import { readdir } from './fs';
 import { Subtitle } from '@src/models';
+import { readdir } from './fs';
 
 const subtitleExtList = ['.smi', '.srt', '.vtt'];
 
-export async function subtitle(path: string): Promise<Subtitle[]> {
+export default async function (path: string): Promise<Subtitle[]> {
   if (extname(path) !== '.mp4') {
     throw new Error(`'${path}' is not mp4`);
   }
@@ -14,8 +16,8 @@ export async function subtitle(path: string): Promise<Subtitle[]> {
   const videoName = parse(path).name;
 
   return (await readdir(videoDirPath))
-    .filter(f => f.startsWith(videoName))
-    .filter(f => subtitleExtList.includes(extname(f)))
+    .filter((f) => f.startsWith(videoName))
+    .filter((f) => subtitleExtList.includes(extname(f)))
     .map((f): Subtitle => {
       const fileName = parse(f).name;
       const language = fileName.replace(videoName, '').replace(/\./g, '');

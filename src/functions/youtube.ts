@@ -13,12 +13,14 @@ export async function getYoutubePlaylist(url: string): Promise<YoutubeInfo[]> {
     });
 }
 
-export function downloadYoutube(url: string, callback: (status: YoutubeStatus) => void): Promise<string | null> {
+export function downloadYoutube(
+  url: string,
+  callback: (status: YoutubeStatus) => void,
+): Promise<string | null> {
   return new Promise((resolve, reject) => {
     let path: string | null = null;
     let stdouts = '';
 
-    // youtube-dl -f bestaudio --no-playlist --no-continue -o '/archive/Musics/download/%(title)s.%(ext)s'
     const options = [
       '-f', 'bestaudio',
       '--no-playlist',
@@ -95,7 +97,7 @@ function extractStatus(str: string): YoutubeStatus | null {
   }
 
   const keys = Object.keys(tmp);
-  if (keys.every(k => tmp[k] >= 0)) {
+  if (keys.every((k) => tmp[k] >= 0)) {
     return tmp;
   }
   return null;

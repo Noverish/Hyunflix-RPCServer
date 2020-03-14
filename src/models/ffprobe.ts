@@ -1,4 +1,4 @@
-export type RawProbed = object;
+export type RawProbed = any;
 
 export interface FFProbeCommon {
   duration: number;

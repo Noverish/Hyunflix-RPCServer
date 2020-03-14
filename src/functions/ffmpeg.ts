@@ -4,17 +4,15 @@ import { join } from 'path';
 import { ffprobeCommon } from '@src/functions/ffprobe';
 import { FFMpegStatus, FFProbeCommon } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
-import { send } from '@src/sse';
 
 const STATUS_EVENT = 'status';
 const FINISH_EVENT = 'finish';
 const ERROR_EVENT = 'error';
 
-export async function ffmpeg(inpath: string,
-                             outpath: string,
-                             args: string[],
-                             callback: (pid: number, event: string, status: FFMpegStatus | string) => void): Promise<number> {
-
+export default async function (inpath: string,
+  outpath: string,
+  args: string[],
+  callback: (pid: number, event: string, status: FFMpegStatus | string) => void): Promise<number> {
   const { duration }: FFProbeCommon = await ffprobeCommon(inpath);
 
   const realInpath = join(ARCHIVE_PATH, inpath);
@@ -60,7 +58,7 @@ function extract(duration: number, data: string): FFMpegStatus | null {
     return null;
   }
 
-  const progress = parseFloat((time / duration * 100).toFixed(2));
+  const progress = parseFloat(((time / duration) * 100).toFixed(2));
   const etaRaw = (duration - time) / speed;
   const eta = parseFloat(etaRaw.toFixed(1));
 

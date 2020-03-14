@@ -3,11 +3,17 @@ import { join, basename, dirname } from 'path';
 
 import { Stat } from '@src/models';
 import { ARCHIVE_PATH } from '@src/config';
+
 const fsPromises = fs.promises;
 
-export async function readdir(path: string): Promise<string[]> {
+export function readdir(path: string): Promise<string[]>;
+export function readdir(path: string, options: { withFileTypes: true }): Promise<fs.Dirent[]>;
+export function readdir(
+  path: string,
+  options?: { withFileTypes: true },
+): Promise<string[] | fs.Dirent[]> {
   const realPath = join(ARCHIVE_PATH, path);
-  return await fsPromises.readdir(realPath);
+  return fsPromises.readdir(realPath, options);
 }
 
 export async function rename(from: string, to: string): Promise<void> {
@@ -20,56 +26,45 @@ export async function rename(from: string, to: string): Promise<void> {
     await fsPromises.mkdir(dirname(realTo), { recursive: true });
   }
 
-  return await fsPromises.rename(realFrom, realTo);
+  await fsPromises.rename(realFrom, realTo);
 }
 
-export async function unlink(path: string): Promise<void> {
+export function unlink(path: string): Promise<void> {
   const realPath = join(ARCHIVE_PATH, path);
-  return await fsPromises.unlink(realPath);
+  return fsPromises.unlink(realPath);
 }
 
 export async function unlinkBulk(paths: string[]): Promise<void> {
-  for (const path of paths) {
-    await unlink(path);
-  }
+  await Promise.all(paths.map(unlink));
 }
 
 export async function stat(path: string): Promise<Stat> {
   const realPath = join(ARCHIVE_PATH, path);
-  const stat = await fsPromises.stat(realPath);
+  const s = await fsPromises.stat(realPath);
   return {
     path,
     name: basename(path),
-    size: stat.size,
-    isdir: stat.isDirectory(),
+    size: s.size,
+    isdir: s.isDirectory(),
   };
 }
 
-export async function statBulk(paths: string[]): Promise<Stat[]> {
-  const stats: Stat[] = [];
-  for (const path of paths) {
-    stats.push(await stat(path));
-  }
-  return stats;
+export function statBulk(paths: string[]): Promise<Stat[]> {
+  return Promise.all(paths.map(stat));
 }
 
 export async function walk(path: string): Promise<string[]> {
-  const toGoList: string[] = [path];
-  const filePaths: string[] = [];
-
-  while (toGoList.length > 0) {
-    const dirPath = toGoList.shift();
-    const files = (await readdir(dirPath)).sort();
-    for (const file of files) {
-      const filePath = join(dirPath, file);
-      const s = await stat(filePath);
-      if (s.isdir) {
-        toGoList.push(filePath);
-      } else {
-        filePaths.push(filePath);
+  const promises: Promise<string[]>[] = (await readdir(path, { withFileTypes: true }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((d): Promise<string[]> => {
+      if (d.isFile()) {
+        return Promise.resolve([join(path, d.name)]);
+      } if (d.isDirectory()) {
+        return walk(join(path, d.name));
       }
-    }
-  }
+      return Promise.resolve([]);
+    });
 
-  return filePaths;
+  return (await Promise.all(promises))
+    .reduce((acc: string[], curr: string[]) => acc.concat(curr), []);
 }

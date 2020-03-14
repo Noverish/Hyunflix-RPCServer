@@ -4,7 +4,9 @@ import 'mocha';
 import { downloadYoutube } from '@src/functions/youtube';
 import { YoutubeStatus } from '@src/models';
 
-const STATUS_MOCK: YoutubeStatus = { progress: 0, total: 0, speed: 0, eta: 0 };
+const STATUS_MOCK: YoutubeStatus = {
+  progress: 0, total: 0, speed: 0, eta: 0,
+};
 
 const tests = [
   {

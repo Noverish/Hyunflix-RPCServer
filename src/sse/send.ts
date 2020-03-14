@@ -20,9 +20,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   logger.sse(path, `Connected from ${req.socket.remoteAddress}`);
 
   req.socket.on('close', () => {
-    const arr: SSEStream[] = streams.get(path) || [];
-    arr.splice(arr.indexOf(stream), 1);
-    streams.set(path, arr);
+    const arr2: SSEStream[] = streams.get(path) || [];
+    arr2.splice(arr2.indexOf(stream), 1);
+    streams.set(path, arr2);
     logger.sse(path, `Disconnected from ${req.socket.remoteAddress}`);
   });
 });
@@ -31,8 +31,8 @@ server.listen(SSE_SERVER_PORT, () => {
   console.log(`*** SSE Server Started at ${SSE_SERVER_PORT} !!!`);
 });
 
-export function send(path: string, data: object | string, event?: string) {
+export default function (path: string, data: object | string, event?: string) {
   logger.sse(path, data);
   const arr = streams.get(path) || [];
-  arr.forEach(stream => stream.write({ data, event }));
+  arr.forEach((stream) => stream.write({ data, event }));
 }
