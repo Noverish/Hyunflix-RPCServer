@@ -4,7 +4,7 @@ import SSEStream from 'ssestream';
 import * as logger from '@src/utils/logger';
 import { SSE_SERVER_PORT } from '@src/config';
 
-const streams = new Map<string, SSEStream[]>();
+const streams = new Map<IncomingMessage, SSEStream>();
 
 const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,15 +14,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
 
   const path: string = req.url;
 
-  const arr: SSEStream[] = streams.get(path) || [];
-  arr.push(stream);
-  streams.set(path, arr);
+  streams.set(req, stream);
   logger.sse(path, `Connected from ${req.socket.remoteAddress}`);
 
   req.socket.on('close', () => {
-    const arr2: SSEStream[] = streams.get(path) || [];
-    arr2.splice(arr2.indexOf(stream), 1);
-    streams.set(path, arr2);
+    streams.delete(req);
     logger.sse(path, `Disconnected from ${req.socket.remoteAddress}`);
   });
 });
@@ -32,7 +28,7 @@ server.listen(SSE_SERVER_PORT, () => {
 });
 
 export default function (path: string, data: object | string, event?: string) {
-  logger.sse(path, data);
-  const arr = streams.get(path) || [];
-  arr.forEach((stream) => stream.write({ data, event }));
+  Array.from(streams.entries())
+    .filter(([req, stream]) => req.url === path)
+    .forEach(([req, stream]) => stream.write({ data, event }));
 }

@@ -12,7 +12,7 @@ const ERROR_EVENT = 'error';
 export default async function (inpath: string,
   outpath: string,
   args: string[],
-  callback: (pid: number, event: string, status: FFMpegStatus | string) => void): Promise<number> {
+  callback: (pid: number, event: string, data: object | string) => void): Promise<number> {
   const { duration }: FFProbeCommon = await ffprobeCommon(inpath);
 
   const realInpath = join(ARCHIVE_PATH, inpath);
@@ -41,7 +41,7 @@ export default async function (inpath: string,
 
   ffmpeg.on('exit', (code: number) => {
     if (code === 0) {
-      callback(ffmpeg.pid, FINISH_EVENT, FINISH_EVENT);
+      callback(ffmpeg.pid, FINISH_EVENT, 'finish');
     } else {
       callback(ffmpeg.pid, ERROR_EVENT, stdouts);
     }
