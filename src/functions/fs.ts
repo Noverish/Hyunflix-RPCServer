@@ -68,3 +68,22 @@ export async function walk(path: string): Promise<string[]> {
   return (await Promise.all(promises))
     .reduce((acc: string[], curr: string[]) => acc.concat(curr), []);
 }
+
+export async function walkDir(path: string): Promise<string[]> {
+  const promises: Promise<string[]>[] = (await readdir(path, { withFileTypes: true }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((d): Promise<string[]> => {
+      if (d.isDirectory()) {
+        return walkDir(join(path, d.name));
+      }
+      return Promise.resolve([]);
+    });
+
+  const result = (await Promise.all(promises))
+    .reduce((acc: string[], curr: string[]) => acc.concat(curr), []);
+
+  if (result.length === 0) {
+    return [path];
+  }
+  return result;
+}

@@ -4,7 +4,7 @@ import send from '@src/sse/send';
 import ffmpeg from '@src/functions/ffmpeg';
 import { ffprobeVideo, ffprobeMusic } from '@src/functions/ffprobe';
 import {
-  readdir, rename, unlink, unlinkBulk, stat, statBulk, walk,
+  readdir, rename, unlink, unlinkBulk, stat, statBulk, walk, walkDir,
 } from '@src/functions/fs';
 import {
   ffmpegExist, ffmpegState, ffmpegPause, ffmpegResume,
@@ -51,6 +51,7 @@ const jaysonServer = new jayson.Server({
   stat: call((args) => stat(args.path)),
   statBulk: call((args) => statBulk(args.paths)),
   walk: call((args) => walk(args.path)),
+  walkDir: call((args) => walkDir(args.path)),
 
   subtitle: call((args) => subtitle(args.path)),
 
