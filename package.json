@@ -24,7 +24,7 @@
     "eslint-config-airbnb-typescript": "^7.0.0",
     "eslint-import-resolver-typescript": "^2.0.0",
     "eslint-plugin-import": "^2.20.1",
-    "mocha": "^7.1.0",
+    "mocha": "^10.2.0",
     "nodemon": "^2.0.2",
     "ts-node": "^8.6.2",
     "tsconfig-paths": "^3.9.0",
